@@ -1,0 +1,14 @@
+# Visual Studio and generated build output
+.vs/
+**/x64/
+**/x86/
+**/Debug/
+**/Release/
+*.vcxproj.user
+*.VC.db
+*.VC.opendb
+
+# Local server state
+orders.json
+orders.json.tmp
+orders.lock

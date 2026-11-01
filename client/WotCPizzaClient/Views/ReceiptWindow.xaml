@@ -1,0 +1,9 @@
+<Window x:Class="WotCPizzaClient.Views.ReceiptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:r="clr-namespace:WotCPizzaClient.Resources"
+        Title="{r:Loc Receipt}" Height="650" Width="720" MinWidth="400" MinHeight="300"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" FontFamily="Consolas"
+             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="18" Padding="16" />
+</Window>

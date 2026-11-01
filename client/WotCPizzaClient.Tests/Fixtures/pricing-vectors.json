@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "Small plain; tax rounds down",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000001", "menuVersion": "1", "pizzas": [{ "pizzaCode": 0, "count": 1, "toppings": [] }], "promoCodes": [], "tipCents": 0, "tipBasisPoints": 0 },
+      "expected": { "subtotalCents": 500, "discountCents": 0, "totalBeforeTaxAndTipCents": 500, "taxCents": 32, "tipCents": 0, "totalAfterTaxAndTipCents": 532 }
+    },
+    {
+      "name": "Two large with both categories, ILOVEPIZZA, 15 percent tip",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000002", "menuVersion": "1", "pizzas": [{ "pizzaCode": 2, "count": 2, "toppings": [{ "toppingBaseCode": 0, "toppings": [0] }, { "toppingBaseCode": 1, "toppings": [1] }] }], "promoCodes": ["ILOVEPIZZA"], "tipCents": 0, "tipBasisPoints": 1500 },
+      "expected": { "subtotalCents": 2856, "discountCents": 285, "totalBeforeTaxAndTipCents": 2571, "taxCents": 167, "tipCents": 410, "totalAfterTaxAndTipCents": 3148 }
+    },
+    {
+      "name": "Three medium with both categories, SAVE5, 18 percent tip",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000003", "menuVersion": "1", "pizzas": [{ "pizzaCode": 1, "count": 3, "toppings": [{ "toppingBaseCode": 0, "toppings": [0] }, { "toppingBaseCode": 1, "toppings": [0] }] }], "promoCodes": ["SAVE5"], "tipCents": 0, "tipBasisPoints": 1800 },
+      "expected": { "subtotalCents": 2499, "discountCents": 500, "totalBeforeTaxAndTipCents": 1999, "taxCents": 129, "tipCents": 383, "totalAfterTaxAndTipCents": 2511 }
+    },
+    {
+      "name": "SAVE5 above threshold with fixed dollar tip",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000004", "menuVersion": "1", "pizzas": [{ "pizzaCode": 1, "count": 3, "toppings": [] }], "promoCodes": ["SAVE5"], "tipCents": 314, "tipBasisPoints": 0 },
+      "expected": { "subtotalCents": 2100, "discountCents": 500, "totalBeforeTaxAndTipCents": 1600, "taxCents": 104, "tipCents": 314, "totalAfterTaxAndTipCents": 2018 }
+    },
+    {
+      "name": "ILOVEPIZZA with percentage tip on discounted after-tax bill",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000005", "menuVersion": "1", "pizzas": [{ "pizzaCode": 2, "count": 1, "toppings": [] }], "promoCodes": ["ILOVEPIZZA"], "tipCents": 0, "tipBasisPoints": 2000 },
+      "expected": { "subtotalCents": 1200, "discountCents": 120, "totalBeforeTaxAndTipCents": 1080, "taxCents": 70, "tipCents": 230, "totalAfterTaxAndTipCents": 1380 }
+    },
+    {
+      "name": "Multiple line items and a dollar tip",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000006", "menuVersion": "1", "pizzas": [{ "pizzaCode": 0, "count": 1, "toppings": [] }, { "pizzaCode": 1, "count": 1, "toppings": [] }], "promoCodes": [], "tipCents": 123, "tipBasisPoints": 0 },
+      "expected": { "subtotalCents": 1200, "discountCents": 0, "totalBeforeTaxAndTipCents": 1200, "taxCents": 78, "tipCents": 123, "totalAfterTaxAndTipCents": 1401 }
+    },
+    {
+      "name": "SAVE5 rejects exactly twenty dollars",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000007", "menuVersion": "1", "pizzas": [{ "pizzaCode": 0, "count": 4, "toppings": [] }], "promoCodes": ["SAVE5"], "tipCents": 0, "tipBasisPoints": 0 },
+      "expectedResultCode": 6
+    },
+    {
+      "name": "Conflicting promos, forward order",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000008", "menuVersion": "1", "pizzas": [{ "pizzaCode": 2, "count": 2, "toppings": [] }], "promoCodes": ["ILOVEPIZZA", "SAVE5"], "tipCents": 0, "tipBasisPoints": 0 },
+      "expectedResultCode": 6
+    },
+    {
+      "name": "Conflicting promos, reverse order",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000009", "menuVersion": "1", "pizzas": [{ "pizzaCode": 2, "count": 2, "toppings": [] }], "promoCodes": ["SAVE5", "ILOVEPIZZA"], "tipCents": 0, "tipBasisPoints": 0 },
+      "expectedResultCode": 6
+    },
+    {
+      "name": "Unknown promo rejected",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000010", "menuVersion": "1", "pizzas": [{ "pizzaCode": 0, "count": 1, "toppings": [] }], "promoCodes": ["UNKNOWN"], "tipCents": 0, "tipBasisPoints": 0 },
+      "expectedResultCode": 6
+    },
+    {
+      "name": "Duplicate promo rejected",
+      "request": { "orderId": "00000000-0000-0000-0000-000000000011", "menuVersion": "1", "pizzas": [{ "pizzaCode": 0, "count": 1, "toppings": [] }], "promoCodes": ["ILOVEPIZZA", "ILOVEPIZZA"], "tipCents": 0, "tipBasisPoints": 0 },
+      "expectedResultCode": 6
+    }
+  ]
+}

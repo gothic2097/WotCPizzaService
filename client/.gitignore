@@ -1,0 +1,8 @@
+.vs/
+**/bin/
+**/obj/
+.tools/
+**/TestResults/
+coverage.cobertura.xml
+*.user
+*.suo

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WotCPizzaClient.Tests/WotCPizzaClient.Tests.csproj" />
+  <Project Path="WotCPizzaClient/WotCPizzaClient.csproj" />
+</Solution>

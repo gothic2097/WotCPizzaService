@@ -1,0 +1,44 @@
+{
+  "menuVersion": "1",
+  "taxBasisPoints": 650,
+  "pizzas": [
+    { "code": 0, "name": "Small pizza", "costCents": 500 },
+    { "code": 1, "name": "Medium pizza", "costCents": 700 },
+    { "code": 2, "name": "Large pizza", "costCents": 1200 }
+  ],
+  "toppings": [
+    {
+      "code": 0, "name": "Basic topping", "costBasisPoints": 800,
+      "toppings": [
+        { "code": 0, "name": "pepperoni" },
+        { "code": 1, "name": "sausage" },
+        { "code": 2, "name": "extra cheese" },
+        { "code": 3, "name": "onions" },
+        { "code": 4, "name": "black olives" },
+        { "code": 5, "name": "green peppers" }
+      ]
+    },
+    {
+      "code": 1, "name": "Premium topping", "costBasisPoints": 1100,
+      "toppings": [
+        { "code": 0, "name": "bacon" },
+        { "code": 1, "name": "chicken" },
+        { "code": 2, "name": "garlic" },
+        { "code": 3, "name": "artichoke hearts" },
+        { "code": 4, "name": "sun-dried tomatoes" },
+        { "code": 5, "name": "pineapple" }
+      ]
+    }
+  ],
+  "promos": [
+    { "code": "ILOVEPIZZA", "isPercentOff": true, "discountBasisPoints": 1000, "validations": [] },
+    {
+      "code": "SAVE5", "isPercentOff": false, "discountCents": 500,
+      "validations": [
+        { "type": 1, "arrayOfStrings": ["ILOVEPIZZA"] },
+        { "type": 3, "thresholdCents": 2000 }
+      ]
+    }
+  ],
+  "settings": { "kitchenHeapCapacity": 3, "timePerPizzaInSeconds": 60, "startDelaySeconds": 10 }
+}
