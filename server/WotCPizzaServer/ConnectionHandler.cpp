@@ -80,7 +80,10 @@ namespace pizza
             try
             {
                 winrt::init_apartment(winrt::apartment_type::multi_threaded);
-                struct Apartment { ~Apartment() { winrt::uninit_apartment(); } } apartment;
+                struct Apartment
+                {
+                    ~Apartment() { winrt::uninit_apartment(); }
+                } apartment;
                 JsonObject response;
                 try { response = server.Handle(ParseJson(Receive(value))); }
                 catch (const Error& error) { response = Failure(error.code, error.kind, error.what()); }

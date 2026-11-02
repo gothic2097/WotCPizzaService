@@ -14,16 +14,46 @@ namespace pizza
 
     enum ResultCode
     {
-        FAIL = -1, SUCCESS = 0, CONNECTION_ERROR, CONNECTION_INVALID_CALL,
-        CONNECTION_INVALID_INPUT, ORDER_ALREADY_CREATED, ORDER_ALREADY_STARTED,
-        PROMO_INVALID, PROMO_VALID
+        FAIL = -1,
+        SUCCESS = 0,
+        CONNECTION_ERROR,
+        CONNECTION_INVALID_CALL,
+        CONNECTION_INVALID_INPUT,
+        ORDER_ALREADY_CREATED,
+        ORDER_ALREADY_STARTED,
+        PROMO_INVALID,
+        PROMO_VALID
     };
 
-    enum OrderStatus { NOT_STARTED, STARTED, READY_FOR_PICK_UP, DELIVERED, CANCELLED };
+    enum OrderStatus
+    {
+        NOT_STARTED,
+        STARTED,
+        READY_FOR_PICK_UP,
+        DELIVERED,
+        CANCELLED
+    };
 
-    enum PromoValidationType { ONE_PROMO_PER_ORDER, NOT_VALID_WITH_OTHER_PROMOS, N_PER_CUSTOMER, TOTAL_OVER_N };
+    enum PromoValidationType
+    {
+        ONE_PROMO_PER_ORDER,
+        NOT_VALID_WITH_OTHER_PROMOS,
+        N_PER_CUSTOMER,
+        TOTAL_OVER_N
+    };
 
-    enum class FunctionId { GetMenu, GetOrder, GetAllOrders, PlaceOrder, GetOrderStatus, UpdateOrder, CancelOrder, IsPromoValid, CompleteOrder };
+    enum class FunctionId
+    {
+        GetMenu,
+        GetOrder,
+        GetAllOrders,
+        PlaceOrder,
+        GetOrderStatus,
+        UpdateOrder,
+        CancelOrder,
+        IsPromoValid,
+        CompleteOrder
+    };
 
     struct Error : std::runtime_error
     {
@@ -84,7 +114,12 @@ namespace pizza
         std::uint32_t cookingSeconds{};
     };
 
-    struct PizzaDisplayItem { std::uint32_t code{}; std::string name; Money costCents{}; };
+    struct PizzaDisplayItem
+    {
+        std::uint32_t code{};
+        std::string name;
+        Money costCents{};
+    };
 
     struct ToppingCategoryDisplay
     {

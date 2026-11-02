@@ -2,4 +2,4 @@
 
 ## Project Guidelines
 - Leave at least one empty line between functions. Keep style-only changes separate from logic changes.
-- In header files, separate class, enum, and struct declarations with at least one empty line. Do not add blank lines between function declarations; separate function implementations with an empty line.
+- Format enums, classes, and structs as multiline declarations with opening and closing braces on separate lines and one enum value or data member per line, rather than compact single-line declarations. Keep these style changes separate from logic changes.

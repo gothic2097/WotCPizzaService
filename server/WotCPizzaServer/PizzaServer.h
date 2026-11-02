@@ -26,7 +26,11 @@ namespace pizza
         void Save();
 
     private:
-        struct Entry { CustomerOrder order; std::int64_t eligibleAt{}; };
+        struct Entry
+        {
+            CustomerOrder order;
+            std::int64_t eligibleAt{};
+        };
 
         struct State
         {
