@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="AppTitle" xml:space="preserve"><value>Pizza — made your way</value></data>
+  <data name="AppTitle" xml:space="preserve"><value>WotC Pizza</value></data>
   <data name="Subtitle" xml:space="preserve"><value>Build a pizza, share a table. Exact prices, fresh from the kitchen.</value></data>
   <data name="CustomerId" xml:space="preserve"><value>Customer ID</value></data>
   <data name="Anonymous" xml:space="preserve"><value>Anonymous order grouping — not an account or authentication.</value></data>

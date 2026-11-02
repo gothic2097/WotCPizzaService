@@ -4,10 +4,46 @@
         xmlns:r="clr-namespace:WotCPizzaClient.Resources"
         Title="{r:Loc AppTitle}" Height="960" Width="1000" MinWidth="850" MinHeight="650"
         Closing="Window_Closing" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="0,2,0,4" />
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="0,2,0,4" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="3,2" />
+        </Style>
+        <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+            <Setter Property="Margin" Value="0,4,12,4" />
+        </Style>
+        <Style x:Key="CompactAccentButton" TargetType="Button" BasedOn="{StaticResource AccentButton}">
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+        <Style x:Key="CompactLinkButton" TargetType="Button" BasedOn="{StaticResource LinkButton}">
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style x:Key="CompactHeading" TargetType="TextBlock" BasedOn="{StaticResource Heading}">
+            <Setter Property="Margin" Value="0,6,0,3" />
+        </Style>
+        <Style x:Key="OptionalMessage" TargetType="TextBlock">
+            <Style.Triggers>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="30,22" MaxWidth="1100">
-            <TextBlock Text="{r:Loc AppTitle}" FontSize="30" FontWeight="Bold" />
-            <TextBlock Text="{r:Loc Subtitle}" Foreground="#685C55" Margin="0,6,0,20" />
+        <StackPanel Margin="20,14" MaxWidth="1100">
+            <TextBlock Text="{r:Loc AppTitle}" FontSize="26" FontWeight="Bold" />
+            <TextBlock Text="{r:Loc Subtitle}" Foreground="#685C55" Margin="0,3,0,10" />
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <StackPanel>
@@ -28,37 +64,46 @@
                 </StackPanel>
             </Grid>
             <TextBlock Text="{r:Loc Anonymous}" FontSize="12" Foreground="#685C55" />
-            <TextBlock Text="{Binding RefreshError}" Foreground="#A12819" TextWrapping="Wrap" />
-            <StackPanel Visibility="{Binding ShowSpinner, Converter={StaticResource BoolVisibility}}" Margin="0,8">
+            <TextBlock Text="{Binding RefreshError}" Style="{StaticResource OptionalMessage}" Foreground="#A12819" TextWrapping="Wrap" />
+            <StackPanel Visibility="{Binding ShowSpinner, Converter={StaticResource BoolVisibility}, FallbackValue=Collapsed}" Margin="0,4">
                 <TextBlock Text="{r:Loc Busy}" />
-                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,6" Foreground="{StaticResource Accent}" />
+                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,3" Foreground="{StaticResource Accent}" />
             </StackPanel>
-            <TextBlock Text="{Binding Notice}" TextWrapping="Wrap" Foreground="#594B21" Margin="0,10" />
-            <TextBlock Text="{Binding Validation}" TextWrapping="Wrap" Foreground="#A12819" FontWeight="SemiBold" Margin="0,4" />
+            <TextBlock Text="{Binding Notice}" Style="{StaticResource OptionalMessage}" TextWrapping="Wrap" Foreground="#594B21" Margin="0,5" />
+            <TextBlock Text="{Binding Validation}" Style="{StaticResource OptionalMessage}" TextWrapping="Wrap" Foreground="#A12819" FontWeight="SemiBold" Margin="0,3" />
             <StackPanel IsEnabled="{Binding CanInteract}">
-                <Button Content="{r:Loc NewOrder}" Command="{Binding NewOrderCommand}" Style="{StaticResource AccentButton}" HorizontalAlignment="Stretch" />
-                <TextBlock Text="{r:Loc Orders}" Style="{StaticResource Heading}" />
+                <Button Content="{r:Loc NewOrder}" Command="{Binding NewOrderCommand}" Style="{StaticResource CompactAccentButton}" HorizontalAlignment="Stretch" />
+                <TextBlock Text="{r:Loc Orders}" Style="{StaticResource CompactHeading}" />
                 <ComboBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=OneWay}"
                           DisplayMemberPath="Label" SelectionChanged="Orders_SelectionChanged" AutomationProperties.Name="{r:Loc Orders}" />
-                <TextBlock Text="{Binding TimeDescription}" Foreground="#685C55" Margin="0,0,0,8" />
+                <TextBlock Text="{Binding TimeDescription}" Style="{StaticResource OptionalMessage}" Foreground="#685C55" Margin="0,0,0,4" />
                 <Button Content="{r:Loc Reconcile}" Command="{Binding ReconcileCommand}" HorizontalAlignment="Left"
-                        Visibility="{Binding HasConflict, Converter={StaticResource BoolVisibility}}" />
-                <StackPanel Visibility="{Binding IsHistorical, Converter={StaticResource BoolVisibility}}">
+                        Visibility="{Binding HasConflict, Converter={StaticResource BoolVisibility}, FallbackValue=Collapsed}" />
+                <StackPanel Visibility="{Binding IsHistorical, Converter={StaticResource BoolVisibility}, FallbackValue=Collapsed}">
                     <TextBox Text="{Binding HistoricalReceipt, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
                              MaxHeight="320" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" />
                     <Button Content="{r:Loc Reprice}" Command="{Binding RepriceCommand}" HorizontalAlignment="Left" />
                 </StackPanel>
-                <Border Background="White" CornerRadius="8" BorderBrush="#E4D8CF" BorderThickness="1" Padding="12" Margin="0,6">
-                    <ScrollViewer MaxHeight="330" VerticalScrollBarVisibility="Auto">
+                <Border Background="White" CornerRadius="8" BorderBrush="#E4D8CF" BorderThickness="1" Padding="8" Margin="0,4">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Lines.Count, FallbackValue=0}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Lines}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#E4D8CF" BorderThickness="0,0,0,1" Padding="4,10">
+                                    <Border BorderBrush="#E4D8CF" BorderThickness="0,0,0,1" Padding="4,6">
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding Details}" Foreground="#685C55" Margin="0,5" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Details}" Foreground="#685C55" Margin="0,3" TextWrapping="Wrap" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
                                                         Visibility="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolVisibility}}">
@@ -74,15 +119,15 @@
                 </Border>
                 <Button Content="{r:Loc AddPizza}" Command="{Binding AddPizzaCommand}" HorizontalAlignment="Left" ToolTip="{r:Loc NotEditable}" />
                 <StackPanel Visibility="{Binding HasOrder, Converter={StaticResource BoolVisibility}}">
-                    <Grid Margin="0,12,0,4">
+                    <Grid Margin="0,6,0,2">
                         <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
                         <TextBlock Text="{r:Loc Subtotal}" /><TextBlock Text="{Binding Subtotal}" Grid.Column="1" />
                         <TextBlock Text="{r:Loc Discount}" Grid.Row="1" /><TextBlock Text="{Binding Discount}" Grid.Row="1" Grid.Column="1" />
-                        <TextBlock Text="{r:Loc BeforeTax}" Grid.Row="2" FontWeight="SemiBold" Margin="0,8" />
-                        <TextBlock Text="{Binding BeforeTax}" Grid.Row="2" Grid.Column="1" FontWeight="SemiBold" Margin="0,8" />
+                        <TextBlock Text="{r:Loc BeforeTax}" Grid.Row="2" FontWeight="SemiBold" Margin="0,4" />
+                        <TextBlock Text="{Binding BeforeTax}" Grid.Row="2" Grid.Column="1" FontWeight="SemiBold" Margin="0,4" />
                     </Grid>
-                    <TextBlock Text="{r:Loc Tip}" Style="{StaticResource Heading}" />
+                    <TextBlock Text="{r:Loc Tip}" Style="{StaticResource CompactHeading}" />
                     <DockPanel>
                         <TextBlock Text="{Binding Tip}" DockPanel.Dock="Right" VerticalAlignment="Center" FontWeight="SemiBold" Margin="10,0" />
                         <WrapPanel IsEnabled="{Binding CanEdit}">
@@ -90,12 +135,12 @@
                             <RadioButton Content="{r:Loc Tip18}" GroupName="Tip" IsChecked="{Binding Tip18}" />
                             <RadioButton Content="{r:Loc Tip20}" GroupName="Tip" IsChecked="{Binding Tip20}" />
                             <RadioButton Content="{r:Loc CustomPercent}" GroupName="Tip" IsChecked="{Binding TipPercent}" />
-                            <TextBox Text="{Binding CustomPercent, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TipPercent}" Width="65" Margin="0,4,14,4" AutomationProperties.Name="{r:Loc CustomPercent}" />
+                            <TextBox Text="{Binding CustomPercent, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TipPercent}" Width="65" Margin="0,2,12,2" AutomationProperties.Name="{r:Loc CustomPercent}" />
                             <RadioButton Content="{r:Loc CustomDollars}" GroupName="Tip" IsChecked="{Binding TipDollars}" />
-                            <TextBox Text="{Binding CustomDollars, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TipDollars}" Width="80" Margin="0,4" AutomationProperties.Name="{r:Loc CustomDollars}" />
+                            <TextBox Text="{Binding CustomDollars, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TipDollars}" Width="80" Margin="0,2" AutomationProperties.Name="{r:Loc CustomDollars}" />
                         </WrapPanel>
                     </DockPanel>
-                    <TextBlock Text="{r:Loc Promo}" Style="{StaticResource Heading}" />
+                    <TextBlock Text="{r:Loc Promo}" Style="{StaticResource CompactHeading}" />
                     <StackPanel Orientation="Horizontal" IsEnabled="{Binding CanEdit}">
                         <TextBox Text="{Binding PromoText, UpdateSourceTrigger=PropertyChanged}" Width="230" MaxLength="80" AutomationProperties.Name="{r:Loc Promo}" />
                         <Button Content="{r:Loc Apply}" Command="{Binding ApplyPromoCommand}" />
@@ -105,29 +150,29 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                    <Button Content="×" Style="{StaticResource LinkButton}" ToolTip="{r:Loc Remove}" AutomationProperties.Name="{r:Loc Remove}"
+                                    <Button Content="×" Style="{StaticResource CompactLinkButton}" ToolTip="{r:Loc Remove}" AutomationProperties.Name="{r:Loc Remove}"
                                             Command="{Binding DataContext.RemovePromoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <DockPanel Margin="0,14,0,8">
+                    <DockPanel Margin="0,6,0,4">
                         <TextBlock Text="{Binding Tax}" DockPanel.Dock="Right" /><TextBlock Text="{r:Loc Tax}" />
                     </DockPanel>
-                    <Border Background="#F5E7DA" CornerRadius="6" Padding="14">
+                    <Border Background="#F5E7DA" CornerRadius="6" Padding="10,7">
                         <DockPanel>
                             <TextBlock Text="{Binding Total}" DockPanel.Dock="Right" FontSize="24" FontWeight="Bold" />
                             <TextBlock Text="{r:Loc Total}" FontSize="24" FontWeight="Bold" />
                         </DockPanel>
                     </Border>
-                    <Button Content="{Binding SubmitLabel}" Command="{Binding SubmitCommand}" Style="{StaticResource AccentButton}" ToolTip="{r:Loc NotEditable}" Margin="0,14,0,0" />
+                    <Button Content="{Binding SubmitLabel}" Command="{Binding SubmitCommand}" Style="{StaticResource CompactAccentButton}" ToolTip="{r:Loc NotEditable}" Margin="0,8,0,0" />
                     <DockPanel>
-                        <Button Content="{r:Loc Cancel}" Command="{Binding CancelCommand}" DockPanel.Dock="Right" Style="{StaticResource LinkButton}"
-                                Visibility="{Binding CanCancel, Converter={StaticResource BoolVisibility}}" />
-                        <Button Content="{Binding ReceiptLabel}" Command="{Binding ReceiptCommand}" HorizontalAlignment="Left" Style="{StaticResource LinkButton}" />
+                        <Button Content="{r:Loc Cancel}" Command="{Binding CancelCommand}" DockPanel.Dock="Right" Style="{StaticResource CompactLinkButton}"
+                                Visibility="{Binding CanCancel, Converter={StaticResource BoolVisibility}, FallbackValue=Collapsed}" />
+                        <Button Content="{Binding ReceiptLabel}" Command="{Binding ReceiptCommand}" HorizontalAlignment="Left" Style="{StaticResource CompactLinkButton}" />
                     </DockPanel>
-                    <Button Content="{r:Loc Pickup}" Command="{Binding PickupCommand}" HorizontalAlignment="Left" Style="{StaticResource LinkButton}"
-                            Visibility="{Binding CanPickup, Converter={StaticResource BoolVisibility}}" />
+                    <Button Content="{r:Loc Pickup}" Command="{Binding PickupCommand}" HorizontalAlignment="Left" Style="{StaticResource CompactLinkButton}"
+                            Visibility="{Binding CanPickup, Converter={StaticResource BoolVisibility}, FallbackValue=Collapsed}" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>
