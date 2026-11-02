@@ -9,6 +9,7 @@
 namespace
 {
     using namespace pizza;
+
     struct ConsoleCapture
     {
         std::ostringstream output;
@@ -21,7 +22,10 @@ namespace
 
     void Check(bool condition, const std::string& message)
     {
-        if (!condition) throw std::runtime_error(message);
+        if (!condition)
+        {
+            throw std::runtime_error(message);
+        }
     }
 
     template<class Action> void ExpectError(Action action, ResultCode code)
@@ -35,6 +39,7 @@ namespace
             Check(error.code == code, "Unexpected error code: " + std::to_string(error.code));
             return;
         }
+
         throw std::runtime_error("Expected an error, but operation succeeded.");
     }
 
@@ -42,6 +47,7 @@ namespace
     {
         int passed{};
         int failed{};
+
         template<class Action> void Run(const std::string& name, Action action)
         {
             try
@@ -66,11 +72,16 @@ namespace
     struct Fixture
     {
         std::filesystem::path directory;
+
         Fixture(const JsonObject& menu)
         {
             static std::atomic<unsigned> sequence{};
             directory = std::filesystem::temp_directory_path() / (L"WotCPizzaTests-" + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()) + L"-" + std::to_wstring(sequence++));
-            if (!std::filesystem::create_directory(directory)) throw std::runtime_error("Cannot create isolated test directory.");
+            if (!std::filesystem::create_directory(directory))
+            {
+                throw std::runtime_error("Cannot create isolated test directory.");
+            }
+            
             WriteJsonAtomic(directory / L"menu.json", menu);
         }
 
@@ -131,11 +142,16 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         {
             const auto request = RequestFromJson(Object(test, L"request"));
             if (test.HasKey(L"expectedResultCode"))
+            {
                 ExpectError([&]
                 {
                     CalculatePrice(menu, request);
                 }, static_cast<ResultCode>(Integer(test, L"expectedResultCode", -1, 7)));
-            else Check(CalculatePrice(menu, request) == TotalsFromJson(Object(test, L"expected")), "Pricing vector mismatch.");
+            }
+            else
+            {
+                Check(CalculatePrice(menu, request) == TotalsFromJson(Object(test, L"expected")), "Pricing vector mismatch.");
+            }
         });
     }
     suite.Run("Data-driven new size/category/promo; per-topping rounding; discount clamp", [&]
@@ -512,23 +528,35 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         Fixture fixture(config); PizzaServer server(fixture.directory); auto request = Request();
         std::barrier start(9); std::atomic<int> created{}, duplicates{}, errors{};
         std::vector<std::jthread> threads;
-        for (int i = 0; i < 8; ++i) threads.emplace_back([&]
+        for (int i = 0; i < 8; ++i)
         {
-            winrt::init_apartment(winrt::apartment_type::multi_threaded);
-            start.arrive_and_wait();
-            try
+            threads.emplace_back([&]
             {
-                const auto code = Code(server.PlaceOrder(0, request));
-                if (code == SUCCESS) ++created;
-                else if (code == ORDER_ALREADY_CREATED) ++duplicates;
-                else ++errors;
-            }
-            catch (...)
-            {
-                ++errors;
-            }
-            winrt::uninit_apartment();
-        });
+                winrt::init_apartment(winrt::apartment_type::multi_threaded);
+                start.arrive_and_wait();
+                try
+                {
+                    const auto code = Code(server.PlaceOrder(0, request));
+                    if (code == SUCCESS)
+                    {
+                        ++created;
+                    }
+                    else if (code == ORDER_ALREADY_CREATED)
+                    {
+                        ++duplicates;
+                    }
+                    else
+                    {
+                        ++errors;
+                    }
+                }
+                catch (...)
+                {
+                    ++errors;
+                }
+                winrt::uninit_apartment();
+            });
+        }
         start.arrive_and_wait(); threads.clear();
         Check(created == 1 && duplicates == 7 && errors == 0, "Concurrent retry invariant violated.");
     });

@@ -16,27 +16,49 @@ namespace pizza
 
         bool IsGuid(const std::string& value)
         {
-            if (value.size() != 36) return false;
+            if (value.size() != 36)
+            {
+                return false;
+            }
+         
             for (std::size_t i = 0; i < value.size(); ++i)
             {
                 if (i == 8 || i == 13 || i == 18 || i == 23)
                 {
-                    if (value[i] != '-') return false;
+                    if (value[i] != '-')
+                    {
+                        return false;
+                    }
                 }
-                else if (!((value[i] >= '0' && value[i] <= '9') || (value[i] >= 'a' && value[i] <= 'f'))) return false;
+                else if (!((value[i] >= '0' && value[i] <= '9') || (value[i] >= 'a' && value[i] <= 'f')))
+                {
+                    return false;
+                }
             }
+            
             return true;
         }
     }
 
     JsonObject ParseJson(const std::string& text)
     {
-        if (text.empty() || text.size() > 1024 * 1024) throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "JSON must be a nonempty object of at most 1 MiB.");
+        if (text.empty() || text.size() > 1024 * 1024)
+        {
+            throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "JSON must be a nonempty object of at most 1 MiB.");
+        }
+
         // Validate UTF-8 before conversion; malformed input must not be silently replaced.
         if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0) == 0)
+        {
             throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "Request is not valid UTF-8.");
+        }
+        
         JsonObject result;
-        if (!JsonObject::TryParse(winrt::to_hstring(text), result)) throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "Expected a valid JSON object.");
+        if (!JsonObject::TryParse(winrt::to_hstring(text), result))
+        {
+            throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "Expected a valid JSON object.");
+        }
+        
         return result;
     }
 
@@ -48,11 +70,19 @@ namespace pizza
     JsonObject ReadJson(const std::filesystem::path& path)
     {
         std::ifstream stream(path, std::ios::binary);
-        if (!stream) throw std::runtime_error("Cannot read " + path.string());
+        if (!stream)
+        {
+            throw std::runtime_error("Cannot read " + path.string());
+        }
+        
         // Storage may grow beyond the per-request bound.
         std::string text((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
         JsonObject result;
-        if (!JsonObject::TryParse(winrt::to_hstring(text), result)) throw std::runtime_error("Invalid JSON in " + path.string());
+        if (!JsonObject::TryParse(winrt::to_hstring(text), result))
+        {
+            throw std::runtime_error("Invalid JSON in " + path.string());
+        }
+        
         return result;
     }
 
@@ -62,7 +92,11 @@ namespace pizza
         temporary += L".tmp";
         const auto text = JsonText(object);
         HANDLE file = CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (file == INVALID_HANDLE_VALUE) throw std::runtime_error("Cannot create persistence temporary file.");
+        if (file == INVALID_HANDLE_VALUE)
+        {
+            throw std::runtime_error("Cannot create persistence temporary file.");
+        }
+        
         std::size_t position = 0;
         bool success = true;
         while (position < text.size())
@@ -76,7 +110,12 @@ namespace pizza
             }
             position += written;
         }
-        if (success) success = FlushFileBuffers(file) != 0;
+        
+        if (success)
+        {
+            success = FlushFileBuffers(file) != 0;
+        }
+        
         CloseHandle(file);
         if (!success || !MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
         {
@@ -87,30 +126,50 @@ namespace pizza
 
     IJsonValue Required(const JsonObject& object, std::wstring_view key, JsonValueType type)
     {
-        if (!object.HasKey(key)) Invalid(key);
+        if (!object.HasKey(key))
+        {
+            Invalid(key);
+        }
+        
         auto value = object.Lookup(key);
-        if (value.ValueType() != type) Invalid(key);
+        if (value.ValueType() != type)
+        {
+            Invalid(key);
+        }
+        
         return value;
     }
 
     std::string String(const JsonObject& object, std::wstring_view key)
     {
         auto value = winrt::to_string(Required(object, key, JsonValueType::String).GetString());
-        if (value.empty() || value.size() > 4096) Invalid(key);
+        if (value.empty() || value.size() > 4096)
+        {
+            Invalid(key);
+        }
+        
         return value;
     }
 
     std::int64_t Integer(const JsonObject& object, std::wstring_view key, std::int64_t min, std::int64_t max)
     {
         const double value = Required(object, key, JsonValueType::Number).GetNumber();
-        if (!std::isfinite(value) || value < static_cast<double>(min) || value > static_cast<double>(max) || std::floor(value) != value) Invalid(key);
+        if (!std::isfinite(value) || value < static_cast<double>(min) || value > static_cast<double>(max) || std::floor(value) != value)
+        {
+            Invalid(key);
+        }
+        
         return static_cast<std::int64_t>(value);
     }
 
     JsonArray Array(const JsonObject& object, std::wstring_view key, std::uint32_t max)
     {
         auto value = Required(object, key, JsonValueType::Array).GetArray();
-        if (value.Size() > max) Invalid(key);
+        if (value.Size() > max)
+        {
+            Invalid(key);
+        }
+        
         return value;
     }
 
@@ -147,11 +206,20 @@ namespace pizza
         {
             return static_cast<char>(std::tolower(ch));
         });
-        if (!IsGuid(request.orderId)) Invalid(L"orderId (GUID)");
+        
+        if (!IsGuid(request.orderId))
+        {
+            Invalid(L"orderId (GUID)");
+        }
+        
         request.menuVersion = String(object, L"menuVersion");
         request.tipCents = Integer(object, L"tipCents");
         request.tipBasisPoints = Integer(object, L"tipBasisPoints", 0, RateScale);
-        if (request.tipBasisPoints > 0 && request.tipCents != 0) Invalid(L"tipCents (must be zero in percentage mode)");
+        if (request.tipBasisPoints > 0 && request.tipCents != 0)
+        {
+            Invalid(L"tipCents (must be zero in percentage mode)");
+        }
+        
         for (const auto& value : Array(object, L"pizzas"))
         {
             auto item = value.GetObject();
@@ -169,13 +237,16 @@ namespace pizza
                     wrapper.Insert(L"code", topping);
                     category.toppings.push_back(static_cast<std::uint32_t>(Integer(wrapper, L"code")));
                 }
+            
                 std::sort(category.toppings.begin(), category.toppings.end());
                 pizza.toppings.push_back(std::move(category));
             }
+        
             std::sort(pizza.toppings.begin(), pizza.toppings.end(), [](const auto& a, const auto& b)
             {
                 return a.toppingBaseCode < b.toppingBaseCode;
             });
+            
             request.pizzas.push_back(std::move(pizza));
         }
         for (const auto& code : Array(object, L"promoCodes", 20))
@@ -184,6 +255,7 @@ namespace pizza
             wrapper.Insert(L"code", code);
             request.promoCodes.push_back(String(wrapper, L"code"));
         }
+        
         std::sort(request.promoCodes.begin(), request.promoCodes.end());
         return request;
     }
@@ -207,16 +279,26 @@ namespace pizza
                 JsonObject entry;
                 Put(entry, L"toppingBaseCode", std::int64_t(category.toppingBaseCode));
                 JsonArray toppings;
-                for (auto code : category.toppings) toppings.Append(JsonValue::CreateNumberValue(code));
+                for (auto code : category.toppings)
+                {
+                    toppings.Append(JsonValue::CreateNumberValue(code));
+                }
+        
                 entry.Insert(L"toppings", toppings);
                 categories.Append(entry);
             }
+            
             item.Insert(L"toppings", categories);
             pizzas.Append(item);
         }
+        
         object.Insert(L"pizzas", pizzas);
         JsonArray promos;
-        for (const auto& code : request.promoCodes) promos.Append(JsonValue::CreateStringValue(winrt::to_hstring(code)));
+        for (const auto& code : request.promoCodes)
+        {
+            promos.Append(JsonValue::CreateStringValue(winrt::to_hstring(code)));
+        }
+        
         object.Insert(L"promoCodes", promos);
         return object;
     }

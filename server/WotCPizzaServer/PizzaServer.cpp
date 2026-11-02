@@ -19,9 +19,15 @@ namespace pizza
             case DELIVERED: statusName = "DELIVERED"; break;
             case CANCELLED: statusName = "CANCELLED"; break;
             }
+            
             std::cout << "Status Change - " << statusName
                 << " - CustomerId: " << order.customerId << ", OrderId: " << order.request.orderId;
-            if (!note.empty()) std::cout << ", Note: " << note;
+            
+            if (!note.empty())
+            {
+                std::cout << ", Note: " << note;
+            }
+            
             std::cout << "\n\n";
         }
     }
@@ -42,12 +48,23 @@ namespace pizza
 
     void PizzaServer::Load()
     {
-        if (!std::filesystem::exists(storagePath)) return;
+        if (!std::filesystem::exists(storagePath))
+        {
+            return;
+        }
+        
         auto root = ReadJson(storagePath);
-        if (Integer(root, L"schemaVersion", 1, 1) != 1) throw std::runtime_error("Unsupported storage schema.");
+        if (Integer(root, L"schemaVersion", 1, 1) != 1)
+        {
+            throw std::runtime_error("Unsupported storage schema.");
+        }
+        
         const auto savedMenu = Object(root, L"menu");
         if (String(savedMenu, L"menuVersion") == menu.version && JsonText(savedMenu) != menuJson)
+        {
             throw std::runtime_error("Menu changed without a new menuVersion. Bump menuVersion before starting.");
+        }
+        
         State loaded;
         for (auto value : Array(root, L"orders", 100000))
         {
@@ -71,21 +88,38 @@ namespace pizza
                 totals.discountCents > totals.subtotalCents || totals.totalBeforeTaxAndTipCents != totals.subtotalCents - totals.discountCents ||
                 totals.totalAfterTaxAndTipCents != totals.totalBeforeTaxAndTipCents + totals.taxCents + totals.tipCents ||
                 order.description.empty() || (order.status == STARTED && order.readyAtUnixSeconds == 0))
+            {
                 throw std::runtime_error("Order storage invariant failed. Refusing to discard or repair orders silently.");
+            }
+            
             PizzaCount(order.request);
             PizzaCount(order.originalRequest);
-            if (!loaded.orders.emplace(order.request.orderId, std::move(entry)).second) throw std::runtime_error("Duplicate stored order ID.");
+            if (!loaded.orders.emplace(order.request.orderId, std::move(entry)).second)
+            {
+                throw std::runtime_error("Duplicate stored order ID.");
+            }
         }
+        
         std::set<std::string> queued;
         for (auto value : Array(root, L"queue", 100000))
         {
             auto id = winrt::to_string(value.GetString());
             if (!loaded.orders.contains(id) || loaded.orders.at(id).order.status != NOT_STARTED || !queued.insert(id).second)
+            {
                 throw std::runtime_error("Invalid stored kitchen queue.");
+            }
+            
             loaded.queue.push_back(id);
         }
+        
         for (const auto& [id, entry] : loaded.orders)
-            if (entry.order.status == NOT_STARTED && !queued.contains(id)) throw std::runtime_error("Pending order missing from stored queue.");
+        {
+            if (entry.order.status == NOT_STARTED && !queued.contains(id))
+            {
+                throw std::runtime_error("Pending order missing from stored queue.");
+            }
+        }
+        
         state = std::move(loaded);
     }
 
@@ -114,7 +148,11 @@ namespace pizza
         }
         root.Insert(L"orders", orders);
         JsonArray queue;
-        for (const auto& id : source.queue) queue.Append(JsonValue::CreateStringValue(winrt::to_hstring(id)));
+        for (const auto& id : source.queue)
+        {
+            queue.Append(JsonValue::CreateStringValue(winrt::to_hstring(id)));
+        }
+        
         root.Insert(L"queue", queue);
         return root;
     }
@@ -141,7 +179,11 @@ namespace pizza
     const CustomerOrder& PizzaServer::Find(std::uint32_t customerId, const std::string& id) const
     {
         auto found = state.orders.find(id);
-        if (found == state.orders.end() || found->second.order.customerId != customerId) throw Error(FAIL, "not_found", "Order not found for this customer.");
+        if (found == state.orders.end() || found->second.order.customerId != customerId)
+        {
+            throw Error(FAIL, "not_found", "Order not found for this customer.");
+        }
+        
         return found->second.order;
     }
 
@@ -193,8 +235,18 @@ namespace pizza
         std::lock_guard lock(mutex);
         JsonArray orders;
         for (const auto& [id, entry] : state.orders)
-            if (entry.order.customerId == customerId) orders.Append(ToJson(entry.order, clock()));
-        if (orders.Size() == 0) throw Error(FAIL, "not_found", "No orders found for this customer.");
+        {
+            if (entry.order.customerId == customerId)
+            {
+                orders.Append(ToJson(entry.order, clock()));
+            }
+        }
+        
+        if (orders.Size() == 0)
+        {
+            throw Error(FAIL, "not_found", "No orders found for this customer.");
+        }
+        
         auto response = Response();
         response.Insert(L"customerOrders", orders);
         return response;
@@ -207,10 +259,19 @@ namespace pizza
         if (found != state.orders.end())
         {
             const auto& existing = Find(customerId, request.orderId);
-            if (existing.originalRequest != request) throw Error(FAIL, "idempotency_conflict", "Order ID already belongs to a different submission. Fetch the existing order; use UpdateOrder to change it.");
+            if (existing.originalRequest != request)
+            {
+                throw Error(FAIL, "idempotency_conflict", "Order ID already belongs to a different submission. Fetch the existing order; use UpdateOrder to change it.");
+            }
+        
             return OrderResponse(existing, ORDER_ALREADY_CREATED);
         }
-        if (state.orders.size() >= 100000) throw Error(FAIL, "capacity", "Order storage limit reached.");
+
+        if (state.orders.size() >= 100000)
+        {
+            throw Error(FAIL, "capacity", "Order storage limit reached.");
+        }
+        
         Entry entry{ Price(customerId, request), clock() + menu.startDelaySeconds };
         auto response = OrderResponse(entry.order);
         State next = state;
@@ -225,15 +286,28 @@ namespace pizza
     {
         std::lock_guard lock(mutex);
         const auto& old = Find(customerId, request.orderId);
-        if (old.lastUpdateRevision == expectedRevision && old.request == request) return OrderResponse(old);
+        if (old.lastUpdateRevision == expectedRevision && old.request == request)
+        {
+            return OrderResponse(old);
+        }
+
         if (old.status != NOT_STARTED)
         {
             auto response = OrderResponse(old, ORDER_ALREADY_STARTED);
             Put(response, L"message", std::string("Only Not Started orders can be updated."));
             return response;
         }
-        if (old.revision != expectedRevision) throw Error(FAIL, "revision_conflict", "Order changed. Fetch the current order before editing again.");
-        if (old.revision >= MaxMoney - 3) throw Error(FAIL, "revision_limit", "Order update limit reached; remaining revisions are reserved for kitchen transitions.");
+
+        if (old.revision != expectedRevision)
+        {
+            throw Error(FAIL, "revision_conflict", "Order changed. Fetch the current order before editing again.");
+        }
+
+        if (old.revision >= MaxMoney - 3)
+        {
+            throw Error(FAIL, "revision_limit", "Order update limit reached; remaining revisions are reserved for kitchen transitions.");
+        }
+        
         auto changed = Price(customerId, request);
         changed.originalRequest = old.originalRequest;
         changed.revision = old.revision + 1;
@@ -249,13 +323,18 @@ namespace pizza
     {
         std::lock_guard lock(mutex);
         const auto& old = Find(customerId, id);
-        if (old.status == CANCELLED) return OrderResponse(old);
+        if (old.status == CANCELLED)
+        {
+            return OrderResponse(old);
+        }
+
         if (old.status != NOT_STARTED)
         {
             auto response = OrderResponse(old, ORDER_ALREADY_STARTED);
             Put(response, L"message", std::string("The kitchen has started this order; cancellation is not allowed."));
             return response;
         }
+        
         State next = state;
         auto& changed = next.orders.at(id).order;
         changed.status = CANCELLED;
@@ -271,8 +350,16 @@ namespace pizza
     {
         std::lock_guard lock(mutex);
         const auto& old = Find(customerId, id);
-        if (old.status == DELIVERED) return OrderResponse(old);
-        if (old.status != READY_FOR_PICK_UP) throw Error(FAIL, "invalid_state", "Only a Ready for Pickup order can be completed.");
+        if (old.status == DELIVERED)
+        {
+            return OrderResponse(old);
+        }
+
+        if (old.status != READY_FOR_PICK_UP)
+        {
+            throw Error(FAIL, "invalid_state", "Only a Ready for Pickup order can be completed.");
+        }
+        
         State next = state;
         auto& changed = next.orders.at(id).order;
         changed.status = DELIVERED;
@@ -286,7 +373,11 @@ namespace pizza
     JsonObject PizzaServer::IsPromoValid(const RequestedCustomerOrder& request, const std::string& code) const
     {
         auto candidate = request;
-        if (std::find(candidate.promoCodes.begin(), candidate.promoCodes.end(), code) == candidate.promoCodes.end()) candidate.promoCodes.push_back(code);
+        if (std::find(candidate.promoCodes.begin(), candidate.promoCodes.end(), code) == candidate.promoCodes.end())
+        {
+            candidate.promoCodes.push_back(code);
+        }
+        
         const auto totals = CalculatePrice(menu, candidate);
         auto response = Response(PROMO_VALID);
         response.Insert(L"totals", ToJson(totals));
@@ -305,7 +396,11 @@ namespace pizza
         for (auto& [id, entry] : next.orders)
         {
             auto& order = entry.order;
-            if (order.status != STARTED) continue;
+            if (order.status != STARTED)
+            {
+                continue;
+            }
+
             if (order.readyAtUnixSeconds <= now)
             {
                 order.status = READY_FOR_PICK_UP;
@@ -313,13 +408,20 @@ namespace pizza
                 ready.push_back(id);
                 changed = true;
             }
-            else ++cooking;
+            else
+            {
+                ++cooking;
+            }
         }
         while (cooking < menu.kitchenCapacity && !next.queue.empty())
         {
             const auto id = next.queue.front();
             auto& entry = next.orders.at(id);
-            if (entry.eligibleAt > now) break;
+            if (entry.eligibleAt > now)
+            {
+                break;
+            }
+        
             next.queue.pop_front();
             entry.order.status = STARTED;
             entry.order.readyAtUnixSeconds = now + entry.order.cookingSeconds;
@@ -328,12 +430,18 @@ namespace pizza
             ++cooking;
             changed = true;
         }
-        if (!changed) return;
+        
+        if (!changed)
+        {
+            return;
+        }
+        
         Commit(std::move(next));
         for (const auto& id : ready)
         {
             LogStatusChange(state.orders.at(id).order);
         }
+        
         for (const auto& id : started)
         {
             const auto& order = state.orders.at(id).order;
@@ -346,17 +454,37 @@ namespace pizza
         try
         {
             const auto number = Integer(request, L"FunctionId", -1, 1000000);
-            if (number < 0 || number > 8) return Failure(CONNECTION_INVALID_CALL, "invalid_call", "FunctionId must be between 0 and 8.");
+            if (number < 0 || number > 8)
+            {
+                return Failure(CONNECTION_INVALID_CALL, "invalid_call", "FunctionId must be between 0 and 8.");
+            }
+        
             const auto function = static_cast<FunctionId>(number);
-            if (function == FunctionId::GetMenu) return GetMenu();
+            if (function == FunctionId::GetMenu)
+            {
+                return GetMenu();
+            }
+            
             const auto input = Object(request, L"Input");
             const auto customerId = static_cast<std::uint32_t>(Integer(input, L"customerId", 0, UINT32_MAX));
-            if (function == FunctionId::GetAllOrders) return GetAllOrders(customerId);
+            if (function == FunctionId::GetAllOrders)
+            {
+                return GetAllOrders(customerId);
+            }
+
             if (function == FunctionId::PlaceOrder || function == FunctionId::UpdateOrder || function == FunctionId::IsPromoValid)
             {
                 auto order = RequestFromJson(Object(input, L"customerOrder"));
-                if (function == FunctionId::PlaceOrder) return PlaceOrder(customerId, order);
-                if (function == FunctionId::UpdateOrder) return UpdateOrder(customerId, order, Integer(input, L"expectedRevision", 1, MaxMoney));
+                if (function == FunctionId::PlaceOrder)
+                {
+                    return PlaceOrder(customerId, order);
+                }
+
+                if (function == FunctionId::UpdateOrder)
+                {
+                    return UpdateOrder(customerId, order, Integer(input, L"expectedRevision", 1, MaxMoney));
+                }
+            
                 return IsPromoValid(order, String(input, L"promoCode"));
             }
             auto id = String(input, L"orderId");
