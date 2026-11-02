@@ -11,10 +11,15 @@ namespace pizza
 {
     namespace
     {
+        using SteadyClock = std::chrono::steady_clock;
+
         struct Socket
         {
             SOCKET value{ INVALID_SOCKET };
-            ~Socket() { if (value != INVALID_SOCKET) closesocket(value); }
+            ~Socket()
+            {
+                if (value != INVALID_SOCKET) closesocket(value);
+            }
         };
 
         struct Winsock
@@ -25,10 +30,18 @@ namespace pizza
                 if (WSAStartup(MAKEWORD(2, 2), &data) != 0) throw std::runtime_error("WSAStartup failed.");
             }
 
-            ~Winsock() { WSACleanup(); }
+            ~Winsock()
+            {
+                WSACleanup();
+            }
         };
 
-        using SteadyClock = std::chrono::steady_clock;
+        struct Worker
+        {
+            std::jthread thread;
+            std::shared_ptr<std::atomic<bool>> done;
+        };
+
         void Timeout(SOCKET socket, int option, SteadyClock::time_point deadline)
         {
             const auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - SteadyClock::now()).count();
@@ -82,23 +95,36 @@ namespace pizza
                 winrt::init_apartment(winrt::apartment_type::multi_threaded);
                 struct Apartment
                 {
-                    ~Apartment() { winrt::uninit_apartment(); }
+                    ~Apartment()
+                    {
+                        winrt::uninit_apartment();
+                    }
                 } apartment;
                 JsonObject response;
-                try { response = server.Handle(ParseJson(Receive(value))); }
-                catch (const Error& error) { response = Failure(error.code, error.kind, error.what()); }
-                catch (const winrt::hresult_error&) { response = Failure(CONNECTION_INVALID_INPUT, "invalid_json", "Invalid JSON request."); }
+                try
+                {
+                    response = server.Handle(ParseJson(Receive(value)));
+                }
+                catch (const Error& error)
+                {
+                    response = Failure(error.code, error.kind, error.what());
+                }
+                catch (const winrt::hresult_error&)
+                {
+                    response = Failure(CONNECTION_INVALID_INPUT, "invalid_json", "Invalid JSON request.");
+                }
                 Send(value, JsonText(response) + '\n');
                 shutdown(value, SD_SEND);
             }
-            catch (const std::exception& error) { std::cerr << "Client connection: " << error.what() << '\n'; }
-            catch (...) { std::cerr << "Client connection failed.\n"; }
+            catch (const std::exception& error)
+            {
+                std::cerr << "Client connection: " << error.what() << '\n';
+            }
+            catch (...)
+            {
+                std::cerr << "Client connection failed.\n";
+            }
         }
-        struct Worker
-        {
-            std::jthread thread;
-            std::shared_ptr<std::atomic<bool>> done;
-        };
     }
 
     void ConnectionHandler::Start(PizzaServer& server, std::uint16_t port, const std::atomic<bool>& stop)
@@ -122,11 +148,20 @@ namespace pizza
         auto nextKitchenTick = SteadyClock::now();
         while (!stop.load())
         {
-            std::erase_if(workers, [](Worker& worker) { return worker.done->load(); });
+            std::erase_if(workers, [](Worker& worker)
+            {
+                return worker.done->load();
+            });
             if (SteadyClock::now() >= nextKitchenTick)
             {
-                try { server.UpdateServer(); }
-                catch (const std::exception& error) { std::cerr << "Kitchen update not committed: " << error.what() << '\n'; }
+                try
+                {
+                    server.UpdateServer();
+                }
+                catch (const std::exception& error)
+                {
+                    std::cerr << "Kitchen update not committed: " << error.what() << '\n';
+                }
                 nextKitchenTick = SteadyClock::now() + std::chrono::milliseconds(500);
             }
             fd_set readable;
@@ -138,14 +173,26 @@ namespace pizza
             if (ready == 0) continue;
             SOCKET client = accept(listener.value, nullptr, nullptr);
             if (client == INVALID_SOCKET) continue;
-            if (workers.size() >= 64) { closesocket(client); continue; }
+            if (workers.size() >= 64)
+            {
+                closesocket(client);
+                continue;
+            }
             try
             {
                 auto done = std::make_shared<std::atomic<bool>>(false);
-                std::jthread thread([client, &server, done] { HandleClient(client, server); done->store(true); });
+                std::jthread thread([client, &server, done]
+                {
+                    HandleClient(client, server);
+                    done->store(true);
+                });
                 workers.push_back({ std::move(thread), std::move(done) });
             }
-            catch (...) { closesocket(client); throw; }
+            catch (...)
+            {
+                closesocket(client);
+                throw;
+            }
         }
         // jthread joins all in-flight requests before server or Winsock can be destroyed.
     }

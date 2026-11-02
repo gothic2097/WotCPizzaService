@@ -121,8 +121,14 @@ namespace pizza
 
     void PizzaServer::Commit(State&& next)
     {
-        try { WriteJsonAtomic(storagePath, Serialize(next)); }
-        catch (const std::exception& error) { throw Error(FAIL, "storage_error", error.what()); }
+        try
+        {
+            WriteJsonAtomic(storagePath, Serialize(next));
+        }
+        catch (const std::exception& error)
+        {
+            throw Error(FAIL, "storage_error", error.what());
+        }
         state = std::move(next);
     }
 
@@ -354,7 +360,10 @@ namespace pizza
                 return IsPromoValid(order, String(input, L"promoCode"));
             }
             auto id = String(input, L"orderId");
-            std::transform(id.begin(), id.end(), id.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+            std::transform(id.begin(), id.end(), id.begin(), [](unsigned char ch)
+            {
+                return static_cast<char>(std::tolower(ch));
+            });
             switch (function)
             {
             case FunctionId::GetOrder: return GetOrder(customerId, id);
@@ -364,8 +373,17 @@ namespace pizza
             default: return Failure(CONNECTION_INVALID_CALL, "invalid_call", "Unknown function.");
             }
         }
-        catch (const Error& error) { return Failure(error.code, error.kind, error.what()); }
-        catch (const winrt::hresult_error&) { return Failure(CONNECTION_INVALID_INPUT, "invalid_input", "JSON value has the wrong type."); }
-        catch (const std::exception&) { return Failure(FAIL, "internal_error", "The operation could not be completed."); }
+        catch (const Error& error)
+        {
+            return Failure(error.code, error.kind, error.what());
+        }
+        catch (const winrt::hresult_error&)
+        {
+            return Failure(CONNECTION_INVALID_INPUT, "invalid_input", "JSON value has the wrong type.");
+        }
+        catch (const std::exception&)
+        {
+            return Failure(FAIL, "internal_error", "The operation could not be completed.");
+        }
     }
 }

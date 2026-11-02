@@ -19,7 +19,10 @@ namespace pizza
             if (value.size() != 36) return false;
             for (std::size_t i = 0; i < value.size(); ++i)
             {
-                if (i == 8 || i == 13 || i == 18 || i == 23) { if (value[i] != '-') return false; }
+                if (i == 8 || i == 13 || i == 18 || i == 23)
+                {
+                    if (value[i] != '-') return false;
+                }
                 else if (!((value[i] >= '0' && value[i] <= '9') || (value[i] >= 'a' && value[i] <= 'f'))) return false;
             }
             return true;
@@ -37,7 +40,10 @@ namespace pizza
         return result;
     }
 
-    std::string JsonText(const JsonObject& object) { return winrt::to_string(object.Stringify()); }
+    std::string JsonText(const JsonObject& object)
+    {
+        return winrt::to_string(object.Stringify());
+    }
 
     JsonObject ReadJson(const std::filesystem::path& path)
     {
@@ -63,7 +69,11 @@ namespace pizza
         {
             DWORD written = 0;
             const DWORD count = static_cast<DWORD>((std::min)(text.size() - position, std::size_t(1024 * 1024)));
-            if (!WriteFile(file, text.data() + position, count, &written, nullptr) || written == 0) { success = false; break; }
+            if (!WriteFile(file, text.data() + position, count, &written, nullptr) || written == 0)
+            {
+                success = false;
+                break;
+            }
             position += written;
         }
         if (success) success = FlushFileBuffers(file) != 0;
@@ -104,21 +114,39 @@ namespace pizza
         return value;
     }
 
-    JsonObject Object(const JsonObject& object, std::wstring_view key) { return Required(object, key, JsonValueType::Object).GetObject(); }
+    JsonObject Object(const JsonObject& object, std::wstring_view key)
+    {
+        return Required(object, key, JsonValueType::Object).GetObject();
+    }
 
-    bool Boolean(const JsonObject& object, std::wstring_view key) { return Required(object, key, JsonValueType::Boolean).GetBoolean(); }
+    bool Boolean(const JsonObject& object, std::wstring_view key)
+    {
+        return Required(object, key, JsonValueType::Boolean).GetBoolean();
+    }
 
-    void Put(JsonObject& object, std::wstring_view key, const std::string& value) { object.Insert(key, JsonValue::CreateStringValue(winrt::to_hstring(value))); }
+    void Put(JsonObject& object, std::wstring_view key, const std::string& value)
+    {
+        object.Insert(key, JsonValue::CreateStringValue(winrt::to_hstring(value)));
+    }
 
-    void Put(JsonObject& object, std::wstring_view key, std::int64_t value) { object.Insert(key, JsonValue::CreateNumberValue(static_cast<double>(value))); }
+    void Put(JsonObject& object, std::wstring_view key, std::int64_t value)
+    {
+        object.Insert(key, JsonValue::CreateNumberValue(static_cast<double>(value)));
+    }
 
-    void Put(JsonObject& object, std::wstring_view key, bool value) { object.Insert(key, JsonValue::CreateBooleanValue(value)); }
+    void Put(JsonObject& object, std::wstring_view key, bool value)
+    {
+        object.Insert(key, JsonValue::CreateBooleanValue(value));
+    }
 
     RequestedCustomerOrder RequestFromJson(const JsonObject& object)
     {
         RequestedCustomerOrder request;
         request.orderId = String(object, L"orderId");
-        std::transform(request.orderId.begin(), request.orderId.end(), request.orderId.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+        std::transform(request.orderId.begin(), request.orderId.end(), request.orderId.begin(), [](unsigned char ch)
+        {
+            return static_cast<char>(std::tolower(ch));
+        });
         if (!IsGuid(request.orderId)) Invalid(L"orderId (GUID)");
         request.menuVersion = String(object, L"menuVersion");
         request.tipCents = Integer(object, L"tipCents");
@@ -144,7 +172,10 @@ namespace pizza
                 std::sort(category.toppings.begin(), category.toppings.end());
                 pizza.toppings.push_back(std::move(category));
             }
-            std::sort(pizza.toppings.begin(), pizza.toppings.end(), [](const auto& a, const auto& b) { return a.toppingBaseCode < b.toppingBaseCode; });
+            std::sort(pizza.toppings.begin(), pizza.toppings.end(), [](const auto& a, const auto& b)
+            {
+                return a.toppingBaseCode < b.toppingBaseCode;
+            });
             request.pizzas.push_back(std::move(pizza));
         }
         for (const auto& code : Array(object, L"promoCodes", 20))

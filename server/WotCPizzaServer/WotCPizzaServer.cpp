@@ -44,7 +44,10 @@ int wmain(int argc, wchar_t* argv[])
         winrt::init_apartment(winrt::apartment_type::multi_threaded);
         struct Apartment
         {
-            ~Apartment() { winrt::uninit_apartment(); }
+            ~Apartment()
+            {
+                winrt::uninit_apartment();
+            }
         } apartment;
 
         std::wstring executable(32768, L'\0');

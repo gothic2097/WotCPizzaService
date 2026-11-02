@@ -13,7 +13,10 @@ namespace
     {
         std::ostringstream output;
         std::streambuf* previous{ std::cout.rdbuf(output.rdbuf()) };
-        ~ConsoleCapture() { std::cout.rdbuf(previous); }
+        ~ConsoleCapture()
+        {
+            std::cout.rdbuf(previous);
+        }
     };
 
     void Check(bool condition, const std::string& message)
@@ -23,8 +26,15 @@ namespace
 
     template<class Action> void ExpectError(Action action, ResultCode code)
     {
-        try { action(); }
-        catch (const Error& error) { Check(error.code == code, "Unexpected error code: " + std::to_string(error.code)); return; }
+        try
+        {
+            action();
+        }
+        catch (const Error& error)
+        {
+            Check(error.code == code, "Unexpected error code: " + std::to_string(error.code));
+            return;
+        }
         throw std::runtime_error("Expected an error, but operation succeeded.");
     }
 
@@ -34,9 +44,22 @@ namespace
         int failed{};
         template<class Action> void Run(const std::string& name, Action action)
         {
-            try { action(); ++passed; std::cout << "PASS " << name << '\n'; }
-            catch (const winrt::hresult_error& error) { ++failed; std::cerr << "FAIL " << name << ": " << winrt::to_string(error.message()) << '\n'; }
-            catch (const std::exception& error) { ++failed; std::cerr << "FAIL " << name << ": " << error.what() << '\n'; }
+            try
+            {
+                action();
+                ++passed;
+                std::cout << "PASS " << name << '\n';
+            }
+            catch (const winrt::hresult_error& error)
+            {
+                ++failed;
+                std::cerr << "FAIL " << name << ": " << winrt::to_string(error.message()) << '\n';
+            }
+            catch (const std::exception& error)
+            {
+                ++failed;
+                std::cerr << "FAIL " << name << ": " << error.what() << '\n';
+            }
         }
     };
 
@@ -51,7 +74,11 @@ namespace
             WriteJsonAtomic(directory / L"menu.json", menu);
         }
 
-        ~Fixture() { std::error_code error; std::filesystem::remove_all(directory, error); }
+        ~Fixture()
+        {
+            std::error_code error;
+            std::filesystem::remove_all(directory, error);
+        }
     };
 
     RequestedCustomerOrder Request(unsigned number = 1)
@@ -63,11 +90,20 @@ namespace
         return request;
     }
 
-    std::int64_t Code(const JsonObject& response) { return Integer(response, L"resultCode", -1, 7); }
+    std::int64_t Code(const JsonObject& response)
+    {
+        return Integer(response, L"resultCode", -1, 7);
+    }
 
-    JsonObject Order(const JsonObject& response) { return Object(response, L"customerOrder"); }
+    JsonObject Order(const JsonObject& response)
+    {
+        return Object(response, L"customerOrder");
+    }
 
-    OrderStatus Status(const JsonObject& response) { return static_cast<OrderStatus>(Integer(Order(response), L"status", 0, 4)); }
+    OrderStatus Status(const JsonObject& response)
+    {
+        return static_cast<OrderStatus>(Integer(Order(response), L"status", 0, 4));
+    }
 
     JsonObject Message(FunctionId function, const RequestedCustomerOrder& request, std::uint32_t customer = 0)
     {
@@ -95,7 +131,10 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         {
             const auto request = RequestFromJson(Object(test, L"request"));
             if (test.HasKey(L"expectedResultCode"))
-                ExpectError([&] { CalculatePrice(menu, request); }, static_cast<ResultCode>(Integer(test, L"expectedResultCode", -1, 7)));
+                ExpectError([&]
+                {
+                    CalculatePrice(menu, request);
+                }, static_cast<ResultCode>(Integer(test, L"expectedResultCode", -1, 7)));
             else Check(CalculatePrice(menu, request) == TotalsFromJson(Object(test, L"expected")), "Pricing vector mismatch.");
         });
     }
@@ -120,43 +159,91 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         request.promoCodes = { "SAVE5" };
         Check(CalculatePrice(extended, request).totalBeforeTaxAndTipCents == 1501, "2001 cents should qualify.");
         extended.pizzas.at(0).costCents = 2000;
-        ExpectError([&] { CalculatePrice(extended, request); }, PROMO_INVALID);
+        ExpectError([&]
+        {
+            CalculatePrice(extended, request);
+        }, PROMO_INVALID);
     });
     suite.Run("Invalid quantities, codes, duplicate toppings, tips, overflow, and stale menu", [&]
     {
         auto request = Request(); request.pizzas.clear();
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.pizzas[0].count = 0;
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.pizzas[0].pizzaCode = 999;
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.pizzas[0].toppings = {{0, {0, 0}}};
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request.pizzas[0].toppings = {{0, {99}}};
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request.pizzas[0].toppings = {{0, {0}}, {0, {1}}};
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.tipCents = -1;
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request.tipCents = 1; request.tipBasisPoints = 1500;
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.tipCents = MaxMoney;
-        ExpectError([&] { CalculatePrice(menu, request); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, CONNECTION_INVALID_INPUT);
         request = Request(); request.menuVersion = "stale";
-        ExpectError([&] { CalculatePrice(menu, request); }, FAIL);
+        ExpectError([&]
+        {
+            CalculatePrice(menu, request);
+        }, FAIL);
     });
     suite.Run("Malformed JSON, fractional/negative quantities, and invalid GUIDs rejected", [&]
     {
-        ExpectError([&] { ParseJson("{"); }, CONNECTION_INVALID_INPUT);
-        ExpectError([&] { ParseJson(std::string("{\"x\":\"") + char(0xff) + "\"}"); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            ParseJson("{");
+        }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            ParseJson(std::string("{\"x\":\"") + char(0xff) + "\"}");
+        }, CONNECTION_INVALID_INPUT);
         auto json = ToJson(Request());
         auto item = Array(json, L"pizzas").GetObjectAt(0);
         item.Insert(L"count", JsonValue::CreateNumberValue(1.5));
-        ExpectError([&] { RequestFromJson(json); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            RequestFromJson(json);
+        }, CONNECTION_INVALID_INPUT);
         item.Insert(L"count", JsonValue::CreateNumberValue(-1));
-        ExpectError([&] { RequestFromJson(json); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            RequestFromJson(json);
+        }, CONNECTION_INVALID_INPUT);
         json = ToJson(Request()); Put(json, L"orderId", std::string("not-a-guid"));
-        ExpectError([&] { RequestFromJson(json); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            RequestFromJson(json);
+        }, CONNECTION_INVALID_INPUT);
     });
     suite.Run("Configuration rejects unsupported customer rules and duplicate menu codes", [&]
     {
@@ -165,10 +252,16 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         auto promo = promos.GetObjectAt(0);
         auto rules = Array(promo, L"validations");
         JsonObject rule; Put(rule, L"type", std::int64_t(N_PER_CUSTOMER)); rules.Append(rule);
-        ExpectError([&] { MenuFromJson(json); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            MenuFromJson(json);
+        }, CONNECTION_INVALID_INPUT);
         json = ParseJson(JsonText(config));
         auto pizzas = Array(json, L"pizzas"); pizzas.Append(pizzas.GetAt(0));
-        ExpectError([&] { MenuFromJson(json); }, CONNECTION_INVALID_INPUT);
+        ExpectError([&]
+        {
+            MenuFromJson(json);
+        }, CONNECTION_INVALID_INPUT);
     });
     suite.Run("API dispatch, validation, menu, description, and unknown customer", [&]
     {
@@ -200,10 +293,16 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
             Check(Code(server.PlaceOrder(0, original)) == SUCCESS, "Place failed.");
             Check(console.output.str() == expectedPlacementMessage, "Placement status message format does not match.");
             Check(Code(server.PlaceOrder(0, original)) == ORDER_ALREADY_CREATED, "Retry duplicated order.");
-            ExpectError([&] { server.PlaceOrder(0, changed); }, FAIL);
+            ExpectError([&]
+            {
+                server.PlaceOrder(0, changed);
+            }, FAIL);
             Check(Code(server.UpdateOrder(0, changed, 1)) == SUCCESS, "Update failed.");
             Check(Integer(Order(server.UpdateOrder(0, changed, 1)), L"revision") == 2, "Update retry applied twice.");
-            ExpectError([&] { server.UpdateOrder(0, original, 1); }, FAIL);
+            ExpectError([&]
+            {
+                server.UpdateOrder(0, original, 1);
+            }, FAIL);
             Check(Integer(Order(server.PlaceOrder(0, original)), L"revision") == 2, "Original retry did not return current order.");
             server.Save();
         }
@@ -227,7 +326,10 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         Fixture fixture(configuration); std::int64_t now = 1000;
         auto first = Request(1); auto second = Request(2);
         {
-            PizzaServer server(fixture.directory, [&] { return now; });
+            PizzaServer server(fixture.directory, [&]
+            {
+                return now;
+            });
             server.PlaceOrder(0, first); server.PlaceOrder(0, second);
             first.pizzas[0].count = 2; server.UpdateOrder(0, first, 1);
             server.UpdateServer(); Check(Status(server.GetOrder(0, first.orderId)) == NOT_STARTED, "Started before grace period.");
@@ -237,7 +339,10 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
             Check(Code(server.CancelOrder(0, first.orderId)) == ORDER_ALREADY_STARTED, "Cancelled cooking order.");
             Check(Code(server.UpdateOrder(0, first, 3)) == ORDER_ALREADY_STARTED, "Updated cooking order.");
         }
-        PizzaServer restored(fixture.directory, [&] { return now; });
+        PizzaServer restored(fixture.directory, [&]
+        {
+            return now;
+        });
         now = 1005; restored.UpdateServer();
         Check(Status(restored.GetOrder(0, first.orderId)) == READY_FOR_PICK_UP, "Cooking deadline not restored.");
         Check(Status(restored.GetOrder(0, second.orderId)) == STARTED, "Queue not restored.");
@@ -249,11 +354,21 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
     {
         ConsoleCapture console;
         Fixture fixture(config); std::int64_t now = 1000;
-        PizzaServer server(fixture.directory, [&] { return now; }); auto request = Request();
+        PizzaServer server(fixture.directory, [&]
+        {
+            return now;
+        });
+        auto request = Request();
         const auto temporary = fixture.directory / L"orders.json.tmp";
         std::filesystem::create_directory(temporary);
-        ExpectError([&] { server.PlaceOrder(0, request); }, FAIL);
-        ExpectError([&] { server.GetOrder(0, request.orderId); }, FAIL);
+        ExpectError([&]
+        {
+            server.PlaceOrder(0, request);
+        }, FAIL);
+        ExpectError([&]
+        {
+            server.GetOrder(0, request.orderId);
+        }, FAIL);
         Check(console.output.str().empty(), "Failed placement logged a status change.");
         std::filesystem::remove(temporary);
         Check(Code(server.PlaceOrder(0, request)) == SUCCESS, "Retry after storage recovery failed.");
@@ -261,10 +376,19 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         Check(console.output.str() == expectedPlacementMessage, "Placement status message format does not match.");
         std::filesystem::create_directory(temporary);
         auto changed = request; changed.pizzas[0].count = 2;
-        ExpectError([&] { server.UpdateOrder(0, changed, 1); }, FAIL);
-        ExpectError([&] { server.CancelOrder(0, request.orderId); }, FAIL);
+        ExpectError([&]
+        {
+            server.UpdateOrder(0, changed, 1);
+        }, FAIL);
+        ExpectError([&]
+        {
+            server.CancelOrder(0, request.orderId);
+        }, FAIL);
         now = 1010;
-        ExpectError([&] { server.UpdateServer(); }, FAIL);
+        ExpectError([&]
+        {
+            server.UpdateServer();
+        }, FAIL);
         auto order = Order(server.GetOrder(0, request.orderId));
         Check(Integer(order, L"revision") == 1 && Integer(order, L"status") == NOT_STARTED, "Failed mutation changed state.");
         Check(Integer(Object(order, L"totals"), L"subtotalCents") == 500, "Failed update changed the total.");
@@ -278,7 +402,10 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         Check(Status(server.GetOrder(0, request.orderId)) == STARTED, "Kitchen could not retry after storage recovery.");
         now = 1070;
         std::filesystem::create_directory(temporary);
-        ExpectError([&] { server.UpdateServer(); }, FAIL);
+        ExpectError([&]
+        {
+            server.UpdateServer();
+        }, FAIL);
         Check(Status(server.GetOrder(0, request.orderId)) == STARTED, "Failed ready transition changed state.");
         Check(console.output.str() == expectedMessage, "Failed ready transition logged a status change.");
         std::filesystem::remove(temporary);
@@ -289,7 +416,10 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         server.UpdateServer();
         Check(console.output.str() == expectedReadyMessage, "Ready order logged another status change.");
         std::filesystem::create_directory(temporary);
-        ExpectError([&] { server.CompleteOrder(0, request.orderId); }, FAIL);
+        ExpectError([&]
+        {
+            server.CompleteOrder(0, request.orderId);
+        }, FAIL);
         Check(Status(server.GetOrder(0, request.orderId)) == READY_FOR_PICK_UP, "Failed completion changed state.");
         Check(console.output.str() == expectedReadyMessage, "Failed completion logged a status change.");
         std::filesystem::remove(temporary);
@@ -302,45 +432,80 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
     suite.Run("Revision limit reserves all kitchen transitions and remains restartable", [&]
     {
         Fixture fixture(config); std::int64_t now = 1000; auto request = Request();
-        { PizzaServer server(fixture.directory, [&] { return now; }); server.PlaceOrder(0, request); }
+        {
+            PizzaServer server(fixture.directory, [&]
+            {
+                return now;
+            });
+            server.PlaceOrder(0, request);
+        }
         auto storage = ReadJson(fixture.directory / L"orders.json");
         auto storedOrder = Array(storage, L"orders").GetObjectAt(0);
         Put(storedOrder, L"revision", MaxMoney - 4);
         WriteJsonAtomic(fixture.directory / L"orders.json", storage);
         {
-            PizzaServer server(fixture.directory, [&] { return now; });
+            PizzaServer server(fixture.directory, [&]
+            {
+                return now;
+            });
             request.tipCents = 1;
             Check(Code(server.UpdateOrder(0, request, MaxMoney - 4)) == SUCCESS, "Last allowed update failed.");
-            ExpectError([&] { server.UpdateOrder(0, request, MaxMoney - 3); }, FAIL);
+            ExpectError([&]
+            {
+                server.UpdateOrder(0, request, MaxMoney - 3);
+            }, FAIL);
             now = 1010; server.UpdateServer();
             now = 1070; server.UpdateServer();
             Check(Status(server.CompleteOrder(0, request.orderId)) == DELIVERED, "Revision limit blocked delivery.");
         }
-        PizzaServer restored(fixture.directory, [&] { return now; });
+        PizzaServer restored(fixture.directory, [&]
+        {
+            return now;
+        });
         Check(Integer(Order(restored.GetOrder(0, request.orderId)), L"revision") == MaxMoney, "Terminal revision did not survive restart.");
     });
     suite.Run("Corrupt storage fails startup instead of discarding orders", [&]
     {
         Fixture fixture(config); WriteJsonAtomic(fixture.directory / L"orders.json", JsonObject{});
         bool failed = false;
-        try { PizzaServer server(fixture.directory); } catch (const std::exception&) { failed = true; }
+        try
+        {
+            PizzaServer server(fixture.directory);
+        }
+        catch (const std::exception&)
+        {
+            failed = true;
+        }
         Check(failed, "Corrupt storage was silently ignored.");
     });
     suite.Run("Menu changes require a new version; historical totals stay fixed", [&]
     {
         Fixture fixture(config); auto request = Request();
-        { PizzaServer server(fixture.directory); server.PlaceOrder(0, request); }
+        {
+            PizzaServer server(fixture.directory);
+            server.PlaceOrder(0, request);
+        }
         auto updated = ParseJson(JsonText(config));
         auto size = Array(updated, L"pizzas").GetObjectAt(0); Put(size, L"costCents", std::int64_t(999));
         WriteJsonAtomic(fixture.directory / L"menu.json", updated);
         bool failed = false;
-        try { PizzaServer server(fixture.directory); } catch (const std::exception&) { failed = true; }
+        try
+        {
+            PizzaServer server(fixture.directory);
+        }
+        catch (const std::exception&)
+        {
+            failed = true;
+        }
         Check(failed, "Changed menu accepted with reused version.");
         Put(updated, L"menuVersion", std::string("2")); WriteJsonAtomic(fixture.directory / L"menu.json", updated);
         PizzaServer server(fixture.directory);
         Check(Integer(Object(Order(server.GetOrder(0, request.orderId)), L"totals"), L"subtotalCents") == 500, "Historical total changed.");
         Check(Code(server.PlaceOrder(0, request)) == ORDER_ALREADY_CREATED, "Old-menu retry failed.");
-        request.orderId = Request(2).orderId; ExpectError([&] { server.PlaceOrder(0, request); }, FAIL);
+        request.orderId = Request(2).orderId; ExpectError([&]
+        {
+            server.PlaceOrder(0, request);
+        }, FAIL);
     });
     suite.Run("Concurrent identical submissions create exactly one order", [&]
     {
@@ -351,8 +516,17 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
         {
             winrt::init_apartment(winrt::apartment_type::multi_threaded);
             start.arrive_and_wait();
-            try { const auto code = Code(server.PlaceOrder(0, request)); if (code == SUCCESS) ++created; else if (code == ORDER_ALREADY_CREATED) ++duplicates; else ++errors; }
-            catch (...) { ++errors; }
+            try
+            {
+                const auto code = Code(server.PlaceOrder(0, request));
+                if (code == SUCCESS) ++created;
+                else if (code == ORDER_ALREADY_CREATED) ++duplicates;
+                else ++errors;
+            }
+            catch (...)
+            {
+                ++errors;
+            }
             winrt::uninit_apartment();
         });
         start.arrive_and_wait(); threads.clear();
@@ -362,19 +536,36 @@ int RunSelfTests(const std::filesystem::path& executableDirectory)
     {
         for (unsigned iteration = 0; iteration < 20; ++iteration)
         {
-            Fixture fixture(config); std::int64_t now = 1000; PizzaServer server(fixture.directory, [&] { return now; });
+            Fixture fixture(config); std::int64_t now = 1000; PizzaServer server(fixture.directory, [&]
+            {
+                return now;
+            });
             const auto request = Request(iteration + 1); server.PlaceOrder(0, request); now = 2000;
             std::barrier start(3); std::int64_t cancelCode = -99; std::atomic<int> errors{};
             std::jthread cancel([&]
             {
                 winrt::init_apartment(winrt::apartment_type::multi_threaded); start.arrive_and_wait();
-                try { cancelCode = Code(server.CancelOrder(0, request.orderId)); } catch (...) { ++errors; }
+                try
+                {
+                    cancelCode = Code(server.CancelOrder(0, request.orderId));
+                }
+                catch (...)
+                {
+                    ++errors;
+                }
                 winrt::uninit_apartment();
             });
             std::jthread kitchen([&]
             {
                 winrt::init_apartment(winrt::apartment_type::multi_threaded); start.arrive_and_wait();
-                try { server.UpdateServer(); } catch (...) { ++errors; }
+                try
+                {
+                    server.UpdateServer();
+                }
+                catch (...)
+                {
+                    ++errors;
+                }
                 winrt::uninit_apartment();
             });
             start.arrive_and_wait(); cancel.join(); kitchen.join();

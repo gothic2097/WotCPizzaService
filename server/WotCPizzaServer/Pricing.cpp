@@ -8,9 +8,15 @@ namespace pizza
 {
     namespace
     {
-        [[noreturn]] void Invalid(const std::string& message) { throw Error(CONNECTION_INVALID_INPUT, "invalid_order", message); }
+        [[noreturn]] void Invalid(const std::string& message)
+        {
+            throw Error(CONNECTION_INVALID_INPUT, "invalid_order", message);
+        }
 
-        [[noreturn]] void InvalidPromo(const std::string& code, const std::string& message) { throw Error(PROMO_INVALID, "invalid_promo", code + ": " + message); }
+        [[noreturn]] void InvalidPromo(const std::string& code, const std::string& message)
+        {
+            throw Error(PROMO_INVALID, "invalid_promo", code + ": " + message);
+        }
 
         Money Bounded(Money value)
         {
