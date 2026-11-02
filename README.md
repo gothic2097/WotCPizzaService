@@ -145,11 +145,37 @@ Updates are similarly protected by revision checks and the same mutex.
 - Branch coverage was not measured; some edge cases around connection limits, exact shutdown timing, and full UI accessibility are covered by design and smoke tests rather than exhaustive automation.
 - `N_PER_CUSTOMER` promo validation exists in the enum but is rejected in configuration (deferred).
 
-Next steps would include durable client retry state, a proper database, measured coverage, and richer operational tooling.
+(Human written)
+- Additionally the server in general is a fake, in a production situataion I would have used cloud services (AWS/Azure), something like AWS Lambdas mixed with DynamoDB/S3, SMS/SQS, etc. This would have also solved for security and attack vectors, plus given some load balancing.
+
+### What would I built next or do if I had more time 
+
+(Human written)
+- I intended to add an additonal promo case, 1-per customer, but run into a design problem with when promos are applied. Currently they are applied when the order goes to kitchen, this is when I charge the customer, however for the `N_PER_CUSTOMER` type of promo this would have resulting in valiation issues. The change would be minor with AI help, but I'd rather avoid a last minute change and instead just call it out.
+- I would have like to spend more time reviewing and cleaning up the AI's code. I knew there would be a decent amount of code and tried to mitigate review time by putting most of my time into the high level design (I find this a good way to help drive the AI so that it implements code using th patterns I want and not what it wants), but still even with a high level design I would like to of had more time to review and clean up the AI's code and code style.
+- More manual testing would have been ideal.
+- Finally more polish to the UI. This was called out in the requirements and not judged so I avoided devoting any more time to it then needed, but would have been nice to polish it more.
 
 ## AI usage note
 
-I used AI assistants (primarily Grok and similar tools) to brainstorm data modeling, review high-level plans for gaps against the requirements, generate boilerplate JSON examples, and draft sections of documentation. I rejected early suggestions that used floating-point money or that treated a duplicate PlaceOrder as a hard error instead of an idempotent success returning the existing order. I independently verified the pricing invariants (per-topping floor, lexical promo application, tax-on-discounted-subtotal, tip-on-(subtotal+tax), and the SAVE5 threshold) by writing and running the shared `pricing-vectors.json` cases on both the C++ server and the C# client, and by manually walking several boundary orders through the integer arithmetic.
+(Human written)
+- See the `Additional Documents` for my High Level Plan iterations and Copilot chat logs:
+- I had AI help review my high level plan, I had it implement the server, I had it implement the client, and I had it implement the README.md (this section excluded).
+
+### Flow
+- I first used AI to refresh my memory on ways to have two apps on the same windows device communicate. I've used both TCP and pipes in the past, but needed a quick refersher before making the design descision. I asked Grok for an example of each. Ultimately going with TCP as it more closely matched how a client and server would talk in production.
+- The inital high level plan I wrote by hand: `HighLevelPlanIter1_HumanOnly.md`
+- I passed that document to Grok, along with the provided requirements doc. Grok provided feedback on where my plan did not meet requirements. That resulted in the following iterations until I was satisfied that Grok had found all the missing cases:
+  - `HighLevelPlanIter2_HumanWithGrokSuggestions.md`
+  - `HighLevelPlanIter3_HumanWithGrokSuggestions.md`
+  - `HighLevelPlanIter4_HumanWithGrokSuggestions.md`
+- I passed `HighLevelPlanIter4_HumanWithGrokSuggestions.md` to Copilot using a GPT6-Astra agent along with the requirements doc. Copilot analyzed the plan, called out some issues it saw plus options for me to choose from. Two notable examples:
+  1. Using cents for currentcy instead of dollars, this allowed the use of integers instead of floats. I agreed to this suggestion.
+  1. Having an API for the client to call to calculate the cost/tips/tax/etc so that we wouldn't have to mirror logic. This was a case I had debated when drafting my design, there are good arguements for both. Ultimately I stayed with my design. I wanted to reduce server calls and as long as the server remained the authority on what would be charged I felt the mirroring was acceptiable. HOWEVER, if we were more concerned with either maintainablity or preventing certain vectors of fraud then using the API call would become work the extra server calls. Regarless, Copilot recommened to add a shared testing vector between the client and server to make the duplication more maintainable, which I agreed with.
+- I've included the entire Copilot chat thread for building the server in this file: `ChatLog_Server_Copilot_GPT6Astra.md`
+- After the server was built and the tests passed, I had Copilot update the high level plan to include all the changes it had made so that the AI building the client would have the best understanding of what to do: `HighLevelPlanIter5_CopilotModifiedWithServerChanges.md`
+- Using a new solution and new AI thread, I passed `HighLevelPlanIter5_CopilotModifiedWithServerChanges.md` to AI and had it build the client. 
+- Once complete I also had it update the plan, just for consistency/documentation: `HighLevelPlanIter6_CopilotModifiedWithClientChanges.md`.  
 
 ## Testing
 
