@@ -18,8 +18,11 @@ namespace pizza
         CONNECTION_INVALID_INPUT, ORDER_ALREADY_CREATED, ORDER_ALREADY_STARTED,
         PROMO_INVALID, PROMO_VALID
     };
+
     enum OrderStatus { NOT_STARTED, STARTED, READY_FOR_PICK_UP, DELIVERED, CANCELLED };
+
     enum PromoValidationType { ONE_PROMO_PER_ORDER, NOT_VALID_WITH_OTHER_PROMOS, N_PER_CUSTOMER, TOTAL_OVER_N };
+
     enum class FunctionId { GetMenu, GetOrder, GetAllOrders, PlaceOrder, GetOrderStatus, UpdateOrder, CancelOrder, IsPromoValid, CompleteOrder };
 
     struct Error : std::runtime_error
@@ -36,6 +39,7 @@ namespace pizza
         std::vector<std::uint32_t> toppings;
         bool operator==(const ToppingCategoryOrder&) const = default;
     };
+
     struct PizzaOrder
     {
         std::uint32_t pizzaCode{};
@@ -43,6 +47,7 @@ namespace pizza
         std::vector<ToppingCategoryOrder> toppings;
         bool operator==(const PizzaOrder&) const = default;
     };
+
     struct RequestedCustomerOrder
     {
         std::string orderId;
@@ -53,6 +58,7 @@ namespace pizza
         std::int64_t tipBasisPoints{};
         bool operator==(const RequestedCustomerOrder&) const = default;
     };
+
     struct Totals
     {
         Money subtotalCents{};
@@ -63,6 +69,7 @@ namespace pizza
         Money totalAfterTaxAndTipCents{};
         bool operator==(const Totals&) const = default;
     };
+
     struct CustomerOrder
     {
         std::uint32_t customerId{};
@@ -76,7 +83,9 @@ namespace pizza
         std::int64_t readyAtUnixSeconds{};
         std::uint32_t cookingSeconds{};
     };
+
     struct PizzaDisplayItem { std::uint32_t code{}; std::string name; Money costCents{}; };
+
     struct ToppingCategoryDisplay
     {
         std::uint32_t code{};
@@ -84,12 +93,14 @@ namespace pizza
         std::int64_t costBasisPoints{};
         std::map<std::uint32_t, std::string> toppings;
     };
+
     struct PromoValidation
     {
         PromoValidationType type{};
         std::vector<std::string> arrayOfStrings;
         Money thresholdCents{};
     };
+
     struct Promo
     {
         std::string code;
@@ -97,6 +108,7 @@ namespace pizza
         std::int64_t discount{};
         std::vector<PromoValidation> validations;
     };
+
     struct Menu
     {
         std::string version;

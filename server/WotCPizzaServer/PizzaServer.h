@@ -27,11 +27,13 @@ namespace pizza
 
     private:
         struct Entry { CustomerOrder order; std::int64_t eligibleAt{}; };
+
         struct State
         {
             std::map<std::string, Entry> orders;
             std::deque<std::string> queue;
         };
+
         std::filesystem::path storagePath;
         Menu menu;
         std::string menuJson;
