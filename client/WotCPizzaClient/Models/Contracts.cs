@@ -5,13 +5,46 @@ namespace WotCPizzaClient.Models;
 
 public enum ResultCode
 {
-  Fail = -1, Success = 0, ConnectionError, ConnectionInvalidCall, ConnectionInvalidInput,
-  OrderAlreadyCreated, OrderAlreadyStarted, PromoInvalid, PromoValid
+  Fail = -1,
+  Success = 0,
+  ConnectionError,
+  ConnectionInvalidCall,
+  ConnectionInvalidInput,
+  OrderAlreadyCreated,
+  OrderAlreadyStarted,
+  PromoInvalid,
+  PromoValid
 }
 
-public enum OrderStatus { NotStarted, Started, ReadyForPickUp, Delivered, Cancelled }
-public enum PromoValidationType { OnePromoPerOrder, NotValidWithOtherPromos, NPerCustomer, TotalOverN }
-public enum FunctionId { GetMenu, GetOrder, GetAllOrders, PlaceOrder, GetOrderStatus, UpdateOrder, CancelOrder, IsPromoValid, CompleteOrder }
+public enum OrderStatus
+{
+  NotStarted,
+  Started,
+  ReadyForPickUp,
+  Delivered,
+  Cancelled
+}
+
+public enum PromoValidationType
+{
+  OnePromoPerOrder,
+  NotValidWithOtherPromos,
+  NPerCustomer,
+  TotalOverN
+}
+
+public enum FunctionId
+{
+  GetMenu,
+  GetOrder,
+  GetAllOrders,
+  PlaceOrder,
+  GetOrderStatus,
+  UpdateOrder,
+  CancelOrder,
+  IsPromoValid,
+  CompleteOrder
+}
 
 public sealed record Menu
 {

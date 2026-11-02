@@ -112,7 +112,12 @@ internal sealed class IsolatedServer : IAsyncDisposable
   {
     string executable = Environment.GetEnvironmentVariable("PIZZA_SERVER_EXE") ?? Path.GetFullPath(
       Path.Combine(AppContext.BaseDirectory, "../../../../../WotCPizzaServer/x64/Debug/WotCPizzaServer.exe"));
-    if (!File.Exists(executable)) Assert.Inconclusive("Build the neighboring server or set PIZZA_SERVER_EXE to run isolated integration tests.");
+
+    if (!File.Exists(executable))
+    {
+      Assert.Inconclusive("Build the neighboring server or set PIZZA_SERVER_EXE to run isolated integration tests.");
+    }
+
     string directory = Path.Combine(Path.GetTempPath(), "WotCPizzaClient.Tests", Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(directory);
     context.WriteLine("Isolated server data (retained for diagnostics): " + directory);
@@ -133,23 +138,39 @@ internal sealed class IsolatedServer : IAsyncDisposable
     var process = Process.Start(info) ?? throw new InvalidOperationException("Server process did not start.");
     var server = new IsolatedServer(process, port, context);
     bool started = false;
+
     try
     {
       for (int attempt = 0; attempt < 50; attempt++)
       {
         server.deadline.Token.ThrowIfCancellationRequested();
-        if (process.HasExited) throw new InvalidOperationException("Server exited during startup. Inspect captured output.");
+
+        if (process.HasExited)
+        {
+          throw new InvalidOperationException("Server exited during startup. Inspect captured output.");
+        }
+
         try
         {
           await server.CallAsync(ApiCalls.GetMenu());
           started = true;
           return server;
         }
-        catch (SocketException) { await Task.Delay(100, server.deadline.Token); }
+        catch (SocketException)
+        {
+          await Task.Delay(100, server.deadline.Token);
+        }
       }
+
       throw new TimeoutException("Server did not start listening.");
     }
-    finally { if (!started) await server.DisposeAsync(); }
+    finally
+    {
+      if (!started)
+      {
+        await server.DisposeAsync();
+      }
+    }
   }
 
   internal Task<ApiResponse> CallAsync(ApiRequest request) => service.SendAsync(PizzaService.Prepare(request), deadline.Token);
@@ -160,8 +181,17 @@ internal sealed class IsolatedServer : IAsyncDisposable
     {
       deadline.Token.ThrowIfCancellationRequested();
       var response = await CallAsync(ApiCalls.GetOrderStatus(0, orderId));
-      if (response.Status == OrderStatus.ReadyForPickUp) return;
-      if (response.ResultCode != ResultCode.Success) throw new InvalidDataException(response.Message);
+
+      if (response.Status == OrderStatus.ReadyForPickUp)
+      {
+        return;
+      }
+
+      if (response.ResultCode != ResultCode.Success)
+      {
+        throw new InvalidDataException(response.Message);
+      }
+
       await Task.Delay(100, deadline.Token);
     }
   }
@@ -169,7 +199,12 @@ internal sealed class IsolatedServer : IAsyncDisposable
   public async ValueTask DisposeAsync()
   {
     deadline.Cancel();
-    if (!process.HasExited) process.Kill(entireProcessTree: true);
+
+    if (!process.HasExited)
+    {
+      process.Kill(entireProcessTree: true);
+    }
+
     await process.WaitForExitAsync();
     context.WriteLine(await output);
     context.WriteLine(await errors);

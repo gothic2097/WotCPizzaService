@@ -19,7 +19,11 @@ public partial class PizzaEditorWindow : Window
 
   private void Save_Click(object sender, RoutedEventArgs e)
   {
-    if (!viewModel.CanSave) return;
+    if (!viewModel.CanSave)
+    {
+      return;
+    }
+
     Result = viewModel.Build();
     DialogResult = true;
   }

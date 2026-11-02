@@ -18,7 +18,11 @@ public class PizzaServiceTests
     var result = await ExchangeAsync(async (stream, token) =>
     {
       var bytes = Encoding.UTF8.GetBytes("{\"resultCode\":-1,\"message\":\"caf\u00e9\"}\n");
-      foreach (byte value in bytes) await stream.WriteAsync(new byte[] { value }, token);
+
+      foreach (byte value in bytes)
+      {
+        await stream.WriteAsync(new byte[] { value }, token);
+      }
     });
     Assert.AreEqual("caf\u00e9", result.Message);
   }
@@ -92,8 +96,15 @@ public class PizzaServiceTests
     listener.Start();
     var client = new PizzaService(port: ((IPEndPoint)listener.LocalEndpoint).Port);
     Task peer = ServeAsync(listener, respond, deadline.Token);
-    try { return await client.SendAsync(PizzaService.Prepare(ApiCalls.GetMenu()), deadline.Token); }
-    finally { await peer; }
+
+    try
+    {
+      return await client.SendAsync(PizzaService.Prepare(ApiCalls.GetMenu()), deadline.Token);
+    }
+    finally
+    {
+      await peer;
+    }
   }
 
   private static async Task ServeAsync(TcpListener listener, Func<NetworkStream, CancellationToken, Task> respond, CancellationToken token)

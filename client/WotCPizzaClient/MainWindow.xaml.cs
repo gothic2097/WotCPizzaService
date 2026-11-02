@@ -38,6 +38,7 @@ namespace WotCPizzaClient
     {
       refreshTimer.Stop();
       await viewModel.RefreshAsync();
+
       if (IsLoaded)
       {
         ResetRefreshTimer(this, EventArgs.Empty);
@@ -47,6 +48,7 @@ namespace WotCPizzaClient
     private void ResetRefreshTimer(object? sender, EventArgs e)
     {
       refreshTimer.Stop();
+
       if (viewModel.IsSignedIn && viewModel.NextRefreshInterval is { } interval)
       {
         refreshTimer.Interval = interval;
