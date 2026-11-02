@@ -15,16 +15,19 @@ namespace
         std::streambuf* previous{ std::cout.rdbuf(output.rdbuf()) };
         ~ConsoleCapture() { std::cout.rdbuf(previous); }
     };
+
     void Check(bool condition, const std::string& message)
     {
         if (!condition) throw std::runtime_error(message);
     }
+
     template<class Action> void ExpectError(Action action, ResultCode code)
     {
         try { action(); }
         catch (const Error& error) { Check(error.code == code, "Unexpected error code: " + std::to_string(error.code)); return; }
         throw std::runtime_error("Expected an error, but operation succeeded.");
     }
+
     struct Suite
     {
         int passed{};
@@ -36,6 +39,7 @@ namespace
             catch (const std::exception& error) { ++failed; std::cerr << "FAIL " << name << ": " << error.what() << '\n'; }
         }
     };
+
     struct Fixture
     {
         std::filesystem::path directory;
@@ -46,8 +50,10 @@ namespace
             if (!std::filesystem::create_directory(directory)) throw std::runtime_error("Cannot create isolated test directory.");
             WriteJsonAtomic(directory / L"menu.json", menu);
         }
+
         ~Fixture() { std::error_code error; std::filesystem::remove_all(directory, error); }
     };
+
     RequestedCustomerOrder Request(unsigned number = 1)
     {
         RequestedCustomerOrder request;
@@ -56,9 +62,13 @@ namespace
         request.pizzas.push_back({ 0, 1, {} });
         return request;
     }
+
     std::int64_t Code(const JsonObject& response) { return Integer(response, L"resultCode", -1, 7); }
+
     JsonObject Order(const JsonObject& response) { return Object(response, L"customerOrder"); }
+
     OrderStatus Status(const JsonObject& response) { return static_cast<OrderStatus>(Integer(Order(response), L"status", 0, 4)); }
+
     JsonObject Message(FunctionId function, const RequestedCustomerOrder& request, std::uint32_t customer = 0)
     {
         JsonObject input;

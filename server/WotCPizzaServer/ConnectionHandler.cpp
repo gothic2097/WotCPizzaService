@@ -16,6 +16,7 @@ namespace pizza
             SOCKET value{ INVALID_SOCKET };
             ~Socket() { if (value != INVALID_SOCKET) closesocket(value); }
         };
+
         struct Winsock
         {
             Winsock()
@@ -23,8 +24,10 @@ namespace pizza
                 WSADATA data{};
                 if (WSAStartup(MAKEWORD(2, 2), &data) != 0) throw std::runtime_error("WSAStartup failed.");
             }
+
             ~Winsock() { WSACleanup(); }
         };
+
         using SteadyClock = std::chrono::steady_clock;
         void Timeout(SOCKET socket, int option, SteadyClock::time_point deadline)
         {
@@ -34,6 +37,7 @@ namespace pizza
             if (setsockopt(socket, SOL_SOCKET, option, reinterpret_cast<const char*>(&timeout), sizeof(timeout)) == SOCKET_ERROR)
                 throw Error(CONNECTION_ERROR, "socket_error", "Unable to configure socket timeout.");
         }
+
         void Send(SOCKET socket, const std::string& text)
         {
             std::size_t offset = 0;
@@ -46,6 +50,7 @@ namespace pizza
                 offset += count;
             }
         }
+
         std::string Receive(SOCKET socket)
         {
             const auto deadline = SteadyClock::now() + std::chrono::seconds(5);
@@ -68,6 +73,7 @@ namespace pizza
                 }
             }
         }
+
         void HandleClient(SOCKET value, PizzaServer& server) noexcept
         {
             Socket socket{ value };

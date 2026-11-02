@@ -9,18 +9,22 @@ namespace pizza
     namespace
     {
         [[noreturn]] void Invalid(const std::string& message) { throw Error(CONNECTION_INVALID_INPUT, "invalid_order", message); }
+
         [[noreturn]] void InvalidPromo(const std::string& code, const std::string& message) { throw Error(PROMO_INVALID, "invalid_promo", code + ": " + message); }
+
         Money Bounded(Money value)
         {
             if (value < 0 || value > MaxMoney) Invalid("Order amount exceeds the supported limit.");
             return value;
         }
+
         std::string Dollars(Money value)
         {
             std::ostringstream stream;
             stream << '$' << value / 100 << '.' << std::setw(2) << std::setfill('0') << value % 100;
             return stream.str();
         }
+
         std::string Name(const JsonObject& object)
         {
             auto value = String(object, L"name");

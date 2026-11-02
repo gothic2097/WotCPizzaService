@@ -13,6 +13,7 @@ namespace pizza
         {
             throw Error(CONNECTION_INVALID_INPUT, "invalid_input", "Missing, invalid, or out-of-range field: " + winrt::to_string(key));
         }
+
         bool IsGuid(const std::string& value)
         {
             if (value.size() != 36) return false;
@@ -35,7 +36,9 @@ namespace pizza
         if (!JsonObject::TryParse(winrt::to_hstring(text), result)) throw Error(CONNECTION_INVALID_INPUT, "invalid_json", "Expected a valid JSON object.");
         return result;
     }
+
     std::string JsonText(const JsonObject& object) { return winrt::to_string(object.Stringify()); }
+
     JsonObject ReadJson(const std::filesystem::path& path)
     {
         std::ifstream stream(path, std::ios::binary);
@@ -46,6 +49,7 @@ namespace pizza
         if (!JsonObject::TryParse(winrt::to_hstring(text), result)) throw std::runtime_error("Invalid JSON in " + path.string());
         return result;
     }
+
     void WriteJsonAtomic(const std::filesystem::path& path, const JsonObject& object)
     {
         auto temporary = path;
@@ -70,6 +74,7 @@ namespace pizza
             throw std::runtime_error("Cannot commit order storage; operation was not acknowledged.");
         }
     }
+
     IJsonValue Required(const JsonObject& object, std::wstring_view key, JsonValueType type)
     {
         if (!object.HasKey(key)) Invalid(key);
@@ -77,28 +82,36 @@ namespace pizza
         if (value.ValueType() != type) Invalid(key);
         return value;
     }
+
     std::string String(const JsonObject& object, std::wstring_view key)
     {
         auto value = winrt::to_string(Required(object, key, JsonValueType::String).GetString());
         if (value.empty() || value.size() > 4096) Invalid(key);
         return value;
     }
+
     std::int64_t Integer(const JsonObject& object, std::wstring_view key, std::int64_t min, std::int64_t max)
     {
         const double value = Required(object, key, JsonValueType::Number).GetNumber();
         if (!std::isfinite(value) || value < static_cast<double>(min) || value > static_cast<double>(max) || std::floor(value) != value) Invalid(key);
         return static_cast<std::int64_t>(value);
     }
+
     JsonArray Array(const JsonObject& object, std::wstring_view key, std::uint32_t max)
     {
         auto value = Required(object, key, JsonValueType::Array).GetArray();
         if (value.Size() > max) Invalid(key);
         return value;
     }
+
     JsonObject Object(const JsonObject& object, std::wstring_view key) { return Required(object, key, JsonValueType::Object).GetObject(); }
+
     bool Boolean(const JsonObject& object, std::wstring_view key) { return Required(object, key, JsonValueType::Boolean).GetBoolean(); }
+
     void Put(JsonObject& object, std::wstring_view key, const std::string& value) { object.Insert(key, JsonValue::CreateStringValue(winrt::to_hstring(value))); }
+
     void Put(JsonObject& object, std::wstring_view key, std::int64_t value) { object.Insert(key, JsonValue::CreateNumberValue(static_cast<double>(value))); }
+
     void Put(JsonObject& object, std::wstring_view key, bool value) { object.Insert(key, JsonValue::CreateBooleanValue(value)); }
 
     RequestedCustomerOrder RequestFromJson(const JsonObject& object)
@@ -143,6 +156,7 @@ namespace pizza
         std::sort(request.promoCodes.begin(), request.promoCodes.end());
         return request;
     }
+
     JsonObject ToJson(const RequestedCustomerOrder& request)
     {
         JsonObject object;
@@ -175,6 +189,7 @@ namespace pizza
         object.Insert(L"promoCodes", promos);
         return object;
     }
+
     JsonObject ToJson(const Totals& totals)
     {
         JsonObject object;
@@ -186,11 +201,13 @@ namespace pizza
         Put(object, L"totalAfterTaxAndTipCents", totals.totalAfterTaxAndTipCents);
         return object;
     }
+
     Totals TotalsFromJson(const JsonObject& object)
     {
         return { Integer(object, L"subtotalCents"), Integer(object, L"discountCents"), Integer(object, L"totalBeforeTaxAndTipCents"),
             Integer(object, L"taxCents"), Integer(object, L"tipCents"), Integer(object, L"totalAfterTaxAndTipCents") };
     }
+
     JsonObject ToJson(const CustomerOrder& order, std::int64_t now)
     {
         auto object = ToJson(order.request);
@@ -202,12 +219,14 @@ namespace pizza
         object.Insert(L"totals", ToJson(order.totals));
         return object;
     }
+
     JsonObject Response(ResultCode code)
     {
         JsonObject object;
         Put(object, L"resultCode", std::int64_t(code));
         return object;
     }
+
     JsonObject Failure(ResultCode code, const std::string& kind, const std::string& message)
     {
         auto object = Response(code);

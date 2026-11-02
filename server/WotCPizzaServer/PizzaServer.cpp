@@ -125,23 +125,27 @@ namespace pizza
         catch (const std::exception& error) { throw Error(FAIL, "storage_error", error.what()); }
         state = std::move(next);
     }
+
     void PizzaServer::Save()
     {
         std::lock_guard lock(mutex);
         Commit(State(state));
     }
+
     const CustomerOrder& PizzaServer::Find(std::uint32_t customerId, const std::string& id) const
     {
         auto found = state.orders.find(id);
         if (found == state.orders.end() || found->second.order.customerId != customerId) throw Error(FAIL, "not_found", "Order not found for this customer.");
         return found->second.order;
     }
+
     JsonObject PizzaServer::OrderResponse(const CustomerOrder& order, ResultCode code) const
     {
         auto response = Response(code);
         response.Insert(L"customerOrder", ToJson(order, clock()));
         return response;
     }
+
     CustomerOrder PizzaServer::Price(std::uint32_t customerId, const RequestedCustomerOrder& request) const
     {
         CustomerOrder order;
@@ -153,17 +157,20 @@ namespace pizza
         order.cookingSeconds = PizzaCount(request) * menu.timePerPizzaSeconds;
         return order;
     }
+
     JsonObject PizzaServer::GetMenu() const
     {
         auto response = Response();
         response.Insert(L"menu", ParseJson(menuJson));
         return response;
     }
+
     JsonObject PizzaServer::GetOrder(std::uint32_t customerId, const std::string& id)
     {
         std::lock_guard lock(mutex);
         return OrderResponse(Find(customerId, id));
     }
+
     JsonObject PizzaServer::GetOrderStatus(std::uint32_t customerId, const std::string& id)
     {
         std::lock_guard lock(mutex);
@@ -174,6 +181,7 @@ namespace pizza
         Put(response, L"timeTillReady", order.status == STARTED ? (std::max)(std::int64_t(0), order.readyAtUnixSeconds - clock()) : std::int64_t(order.status == NOT_STARTED ? order.cookingSeconds : 0));
         return response;
     }
+
     JsonObject PizzaServer::GetAllOrders(std::uint32_t customerId)
     {
         std::lock_guard lock(mutex);
@@ -185,6 +193,7 @@ namespace pizza
         response.Insert(L"customerOrders", orders);
         return response;
     }
+
     JsonObject PizzaServer::PlaceOrder(std::uint32_t customerId, const RequestedCustomerOrder& request)
     {
         std::lock_guard lock(mutex);
@@ -205,6 +214,7 @@ namespace pizza
         LogStatusChange(state.orders.at(request.orderId).order);
         return response;
     }
+
     JsonObject PizzaServer::UpdateOrder(std::uint32_t customerId, const RequestedCustomerOrder& request, std::uint64_t expectedRevision)
     {
         std::lock_guard lock(mutex);
@@ -228,6 +238,7 @@ namespace pizza
         Commit(std::move(next));
         return response;
     }
+
     JsonObject PizzaServer::CancelOrder(std::uint32_t customerId, const std::string& id)
     {
         std::lock_guard lock(mutex);
@@ -249,6 +260,7 @@ namespace pizza
         LogStatusChange(state.orders.at(id).order);
         return response;
     }
+
     JsonObject PizzaServer::CompleteOrder(std::uint32_t customerId, const std::string& id)
     {
         std::lock_guard lock(mutex);
@@ -264,6 +276,7 @@ namespace pizza
         LogStatusChange(state.orders.at(id).order);
         return response;
     }
+
     JsonObject PizzaServer::IsPromoValid(const RequestedCustomerOrder& request, const std::string& code) const
     {
         auto candidate = request;
@@ -273,6 +286,7 @@ namespace pizza
         response.Insert(L"totals", ToJson(totals));
         return response;
     }
+
     void PizzaServer::UpdateServer()
     {
         std::lock_guard lock(mutex);
