@@ -176,6 +176,7 @@ Updates are similarly protected by revision checks and the same mutex.
 - After the server was built and the tests passed, I had Copilot update the high level plan to include all the changes it had made so that the AI building the client would have the best understanding of what to do: `HighLevelPlanIter5_CopilotModifiedWithServerChanges.md`
 - Using a new solution and new AI thread, I passed `HighLevelPlanIter5_CopilotModifiedWithServerChanges.md` to AI and had it build the client. 
 - Once complete I also had it update the plan, just for consistency/documentation: `HighLevelPlanIter6_CopilotModifiedWithClientChanges.md`.  
+- This is a copy of the Copilot chat thread: `ChatLog_Client_Copilot_GPT6Astra.md`
 
 ## Testing
 
