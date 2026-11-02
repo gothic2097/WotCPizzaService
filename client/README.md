@@ -179,7 +179,3 @@ Do not change client prices or suppress server errors to make a failing integrat
 ## AI usage and submission notes
 
 GitHub Copilot assisted with assignment/plan review, C# implementation, WPF bindings, tests, and documentation. Two concrete generated-code issues were corrected during validation: the assumption that `InvalidDataException` would be caught as `IOException`, and a private read-only `TestContext`-typed property that prevented MSTest from discovering integration tests. Regression tests verify that malformed mutation responses preserve the original retry request, and the corrected tests now run against the real server.
-
-The automated verification described here was executed during the AI-assisted implementation. It is not a claim that the candidate independently reviewed or manually tested every feature. Before submission, add your own example of an invariant you personally verified, complete the manual UI checks above, and review the design decisions and remaining cuts.
-
-Publish the client and server to a Git repository host as required by the assignment; publication, remote configuration, and commits were not performed by this implementation. Include clear links or sibling checkout instructions for both repositories.

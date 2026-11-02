@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="WotCPizzaServer/WotCPizzaServer.vcxproj" />
+  <Project Path="WotCPizzaServer/WotCPizzaServer.vcxproj" Id="69cc8268-d461-4394-bbcd-ce1ab3ad2e16" />
 </Solution>

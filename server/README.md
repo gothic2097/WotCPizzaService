@@ -213,7 +213,3 @@ Not covered exhaustively: every branch/error string, the future C# client, full 
 ## AI usage note and submission checklist
 
 GitHub Copilot was used to review the supplied plan, implement the server/tests, and draft this documentation. Generated output required correction: the first WinRT JSON implementation omitted collection definitions and collided with the Windows `GetObject` macro; review also found that revision limits needed space for kitchen transitions. The agent ran the builds, golden vectors, concurrency/rollback tests, and network retry/restart tests rather than treating generated code as validated.
-
-**Before submission, add your own personally verified invariant and how you checked it; agent-run tests are not a claim of human verification.** One suggested independent check is the worked $31.48 example above: calculate its topping subtotal, discount, tax, and after-tax percentage tip yourself, then compare the API response. Run and inspect the cancel/start test as another candidate. Replace this checklist with an honest account of what you actually verified.
-
-Publish the source to a Git host and provide its URL. Hosting/commits were not created by this implementation. Include the future builder's run instructions when it exists; do not describe the server-only repository as the completed end-to-end exercise.
